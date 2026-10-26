@@ -1,0 +1,3 @@
+parameters:
+    env(INVOICE_DUE_DAYS): '15'
+    app.invoice_due_days: '%env(int:INVOICE_DUE_DAYS)%'

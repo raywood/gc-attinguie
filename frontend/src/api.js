@@ -1,0 +1,32 @@
+export class ApiError extends Error {
+  constructor(status, data) {
+    super(data?.error || `Erreur ${status}`)
+    this.status = status
+    this.data = data
+  }
+}
+
+async function request(method, url, body) {
+  const hasBody = body !== undefined
+  const res = await fetch(url, {
+    method,
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', ...(hasBody ? { 'Content-Type': 'application/json' } : {}) },
+    body: hasBody ? JSON.stringify(body) : undefined,
+  })
+  const data = res.status === 204 ? null : await res.json().catch(() => null)
+
+  if (!res.ok) {
+    const isAuthCall = url.endsWith('/api/login') || url.endsWith('/api/me') || url.endsWith('/api/logout')
+    if (res.status === 401 && !isAuthCall) api.onUnauthorized?.()
+    throw new ApiError(res.status, data)
+  }
+  return data
+}
+
+export const api = {
+  onUnauthorized: null,
+  get: (url) => request('GET', url),
+  post: (url, body = {}) => request('POST', url, body),
+  put: (url, body) => request('PUT', url, body),
+}

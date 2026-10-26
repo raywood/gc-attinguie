@@ -1,0 +1,14 @@
+framework:
+    messenger:
+        failure_transport: failed
+        transports:
+            async:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options: { stream: invoices, group: invoice_workers }
+                retry_strategy: { max_retries: 3, delay: 1000, multiplier: 3 }
+            failed:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options: { stream: invoices_failed }
+        routing:
+            App\Message\GenerateInvoiceMessage: async
+            App\Message\IssueInvoiceMessage: async

@@ -1,0 +1,100 @@
+<script setup>
+import { ref, computed, watch, onMounted } from 'vue'
+import { api } from '../api'
+
+const items = ref([])
+const total = ref(0)
+const page = ref(1)
+const pageSize = ref(25)
+const q = ref('')
+const loading = ref(false)
+const error = ref('')
+
+const pages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
+const statusLabels = { active: 'Actif', suspended: 'Suspendu', closed: 'Fermé' }
+
+async function load() {
+  loading.value = true
+  error.value = ''
+  try {
+    const params = new URLSearchParams({ page: String(page.value) })
+    if (q.value.trim()) params.set('q', q.value.trim())
+    const res = await api.get(`/api/businesses?${params}`)
+    items.value = res.items
+    total.value = res.total
+    pageSize.value = res.pageSize
+  } catch (e) {
+    error.value = 'Impossible de charger la liste.'
+  } finally {
+    loading.value = false
+  }
+}
+
+let timer
+watch(q, () => {
+  clearTimeout(timer)
+  timer = setTimeout(() => {
+    page.value = 1
+    load()
+  }, 300)
+})
+
+function go(p) {
+  page.value = Math.min(Math.max(1, p), pages.value)
+  load()
+}
+
+onMounted(load)
+</script>
+
+<template>
+  <div class="row-head">
+    <h1>Commerces <span class="muted">({{ total }})</span></h1>
+    <RouterLink to="/commerces/nouveau" class="btn">+ Saisir des commerces</RouterLink>
+  </div>
+
+  <input v-model="q" class="search" type="search" placeholder="Rechercher par nom ou quartier…" />
+
+  <p v-if="error" class="error" role="alert">{{ error }}</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Commerce</th>
+          <th>Type d’activité</th>
+          <th>Quartier</th>
+          <th>Gérant</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="b in items" :key="b.id">
+          <td>
+            <strong>{{ b.name }}</strong>
+            <div v-if="b.address" class="muted small">{{ b.address }}</div>
+          </td>
+          <td>{{ b.activityType.label }}</td>
+          <td>{{ b.district || '—' }}</td>
+          <td>
+            <template v-if="b.manager">
+              {{ b.manager.fullName }}
+              <div v-if="b.manager.phone" class="muted small">{{ b.manager.phone }}</div>
+            </template>
+            <span v-else class="muted">—</span>
+          </td>
+          <td><span class="badge" :class="b.status">{{ statusLabels[b.status] ?? b.status }}</span></td>
+        </tr>
+        <tr v-if="!loading && !items.length">
+          <td colspan="5" class="muted center">Aucun commerce.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pager" v-if="pages > 1">
+    <button class="btn ghost" :disabled="page <= 1 || loading" @click="go(page - 1)">← Précédent</button>
+    <span class="muted">Page {{ page }} / {{ pages }}</span>
+    <button class="btn ghost" :disabled="page >= pages || loading" @click="go(page + 1)">Suivant →</button>
+  </div>
+</template>
