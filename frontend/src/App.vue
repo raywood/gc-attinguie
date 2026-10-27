@@ -16,6 +16,7 @@ async function onLogout() {
     <nav>
       <RouterLink to="/commerces">Commerces</RouterLink>
       <RouterLink to="/commerces/nouveau">Saisir des commerces</RouterLink>
+      <RouterLink v-if="auth.user?.roles?.includes('ROLE_ADMIN')" to="/factures">Factures et paiements</RouterLink>
     </nav>
     <span class="spacer"></span>
     <span class="muted hide-sm">{{ auth.user.email }}</span>

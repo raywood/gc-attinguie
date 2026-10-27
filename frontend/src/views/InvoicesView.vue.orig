@@ -1,0 +1,184 @@
+<script setup>
+import { reactive, ref, computed, onMounted } from 'vue'
+import { api } from '../api'
+
+const now = new Date()
+const period = ref(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`)
+const items = ref([])
+const selected = ref(null)
+const total = ref(0)
+const page = ref(1)
+const pageSize = ref(25)
+const loading = ref(false)
+const saving = ref(false)
+const error = ref('')
+const notice = ref('')
+const payment = reactive({ amount: '', method: 'cash', reference: '' })
+const fmt = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 })
+const money = (value) => `${fmt.format(Number(value || 0))} FCFA`
+const pages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
+const statusLabels = { draft: 'Brouillon', issued: 'Émise', paid: 'Payée', cancelled: 'Annulée' }
+const methodLabels = { cash: 'Espèces', mobile_money: 'Mobile Money', bank_transfer: 'Virement', cheque: 'Chèque' }
+
+async function load() {
+  loading.value = true
+  error.value = ''
+  notice.value = ''
+  selected.value = null
+  try {
+    const params = new URLSearchParams({ period: period.value, page: String(page.value) })
+    const data = await api.get(`/api/invoices?${params}`)
+    items.value = data.items
+    total.value = data.total
+    pageSize.value = data.pageSize
+  } catch (e) {
+    error.value = e.message || 'Impossible de charger les factures.'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function openInvoice(id) {
+  error.value = ''
+  notice.value = ''
+  try {
+    selected.value = await api.get(`/api/invoices/${id}`)
+    payment.amount = selected.value.balance
+    payment.method = 'cash'
+    payment.reference = ''
+  } catch (e) {
+    error.value = e.message || 'Impossible de lire la facture.'
+  }
+}
+
+async function recordPayment() {
+  if (!selected.value || saving.value) return
+  error.value = ''
+  notice.value = ''
+  if (!payment.reference.trim()) {
+    error.value = 'Renseignez une référence de versement unique.'
+    return
+  }
+  if (!/^\d+(\.\d{1,2})?$/.test(payment.amount) || Number(payment.amount) <= 0) {
+    error.value = 'Saisissez un montant positif (ex. 5000).'
+    return
+  }
+  if (!window.confirm(`Confirmer l’encaissement de ${money(payment.amount)} sur la facture ${selected.value.number} ?`)) return
+  saving.value = true
+  try {
+    const response = await api.post(`/api/invoices/${selected.value.id}/payments`, {
+      amount: payment.amount,
+      method: payment.method,
+      reference: payment.reference.trim(),
+    })
+    selected.value = response.invoice
+    payment.amount = selected.value.balance
+    payment.reference = ''
+    const params = new URLSearchParams({ period: period.value, page: String(page.value) })
+    const data = await api.get(`/api/invoices?${params}`)
+    items.value = data.items
+    notice.value = 'Paiement enregistré dans PostgreSQL.'
+  } catch (e) {
+    error.value = e.message || 'Enregistrement impossible. Vérifiez si un paiement a été créé avant de réessayer.'
+  } finally {
+    saving.value = false
+  }
+}
+
+function changePage(next) {
+  page.value = Math.min(Math.max(next, 1), pages.value)
+  load()
+}
+
+onMounted(load)
+</script>
+
+<template>
+  <div class="row-head">
+    <h1>Facturation et encaissements</h1>
+    <RouterLink to="/commerces" class="btn ghost">Commerces</RouterLink>
+  </div>
+  <div class="actions" style="margin-bottom: 1rem">
+    <label>Période <input v-model="period" type="month" /></label>
+    <button class="btn" :disabled="loading" @click="page = 1; load()">Afficher</button>
+    <span class="muted">{{ total }} facture(s)</span>
+  </div>
+  <p v-if="error" class="error" role="alert">{{ error }}</p>
+  <p v-if="notice" class="success" role="status">{{ notice }}</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Facture</th><th>Commerce</th><th>Échéance</th><th>Statut</th>
+          <th>Total</th><th>Encaissé</th><th>Solde</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="invoice in items" :key="invoice.id">
+          <td>{{ invoice.number }}</td>
+          <td>{{ invoice.business.name }}</td>
+          <td>{{ invoice.dueAt || '—' }}</td>
+          <td>{{ statusLabels[invoice.status] || invoice.status }}</td>
+          <td>{{ money(invoice.total) }}</td>
+          <td>{{ money(invoice.paid) }}</td>
+          <td>{{ money(invoice.balance) }}</td>
+          <td><button class="btn ghost" @click="openInvoice(invoice.id)">Consulter</button></td>
+        </tr>
+        <tr v-if="!loading && !items.length"><td colspan="8" class="muted center">Aucune facture pour cette période.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="pager" v-if="pages > 1">
+    <button class="btn ghost" :disabled="page <= 1 || loading" @click="changePage(page - 1)">Précédent</button>
+    <span>Page {{ page }} / {{ pages }}</span>
+    <button class="btn ghost" :disabled="page >= pages || loading" @click="changePage(page + 1)">Suivant</button>
+  </div>
+
+  <section v-if="selected" class="card" style="margin-top: 1.5rem">
+    <div class="row-head">
+      <h2>Facture {{ selected.number }}</h2>
+      <button class="btn ghost" @click="selected = null">Fermer</button>
+    </div>
+    <p><strong>{{ selected.business.name }}</strong> — {{ statusLabels[selected.status] || selected.status }}</p>
+    <p>Montant : <strong>{{ money(selected.total) }}</strong> · Déjà payé : {{ money(selected.paid) }} ·
+      Solde : <strong>{{ money(selected.balance) }}</strong></p>
+    <h3>Lignes de facture</h3>
+    <div class="table-wrap">
+      <table><thead><tr><th>Libellé</th><th>Qté</th><th>Prix unitaire</th><th>Montant</th></tr></thead>
+        <tbody><tr v-for="(line, index) in selected.lines" :key="index">
+          <td>{{ line.label }}</td><td>{{ line.quantity }}</td><td>{{ money(line.unitPrice) }}</td><td>{{ money(line.amount) }}</td>
+        </tr></tbody>
+      </table>
+    </div>
+    <h3>Historique des paiements</h3>
+    <div class="table-wrap">
+      <table><thead><tr><th>Date</th><th>Mode</th><th>Référence</th><th>Montant</th></tr></thead>
+        <tbody>
+          <tr v-for="p in selected.payments" :key="p.id">
+            <td>{{ new Date(p.receivedAt).toLocaleString('fr-FR') }}</td>
+            <td>{{ methodLabels[p.method] || p.method }}</td><td>{{ p.reference }}</td><td>{{ money(p.amount) }}</td>
+          </tr>
+          <tr v-if="!selected.payments.length"><td colspan="4" class="muted">Aucun paiement enregistré.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <form v-if="selected.status === 'issued' && Number(selected.balance) > 0" @submit.prevent="recordPayment" style="margin-top: 1rem">
+      <h3>Enregistrer un encaissement</h3>
+      <p class="muted small">Utiliser uniquement des paiements fictifs pour les premiers tests. Les données seront réellement enregistrées.</p>
+      <div class="actions">
+        <label>Montant FCFA <input v-model.trim="payment.amount" inputmode="decimal" required /></label>
+        <label>Mode
+          <select v-model="payment.method">
+            <option value="cash">Espèces</option>
+            <option value="mobile_money">Mobile Money</option>
+            <option value="bank_transfer">Virement</option>
+            <option value="cheque">Chèque</option>
+          </select>
+        </label>
+        <label>Référence unique <input v-model.trim="payment.reference" placeholder="Ex. TEST-ENCAISSEMENT-001" maxlength="100" required /></label>
+        <button class="btn" :disabled="saving">{{ saving ? 'Enregistrement…' : 'Confirmer le paiement' }}</button>
+      </div>
+    </form>
+    <p v-else class="muted">Aucun nouvel encaissement possible sur ce statut de facture.</p>
+  </section>
+</template>

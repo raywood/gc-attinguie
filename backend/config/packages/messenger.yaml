@@ -9,6 +9,9 @@ framework:
             failed:
                 dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
                 options: { stream: invoices_failed }
+
+            sync: 'sync://'
+
         routing:
             App\Message\GenerateInvoiceMessage: async
             App\Message\IssueInvoiceMessage: async

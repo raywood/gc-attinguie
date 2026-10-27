@@ -9,6 +9,7 @@ export const router = createRouter({
     { path: '/commerces', name: 'businesses', component: () => import('./views/BusinessesView.vue') },
     { path: '/commerces/nouveau', name: 'business-new', component: () => import('./views/BusinessFormView.vue') },
     { path: '/commerces/:id/modifier', name: 'business-edit', component: () => import('./views/BusinessEditView.vue'), meta: { admin: true } },
+    { path: '/factures', name: 'invoices', component: () => import('./views/InvoicesView.vue'), meta: { admin: true } },
   ],
 })
 
