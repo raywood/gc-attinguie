@@ -9,6 +9,8 @@ services:
       DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?serverVersion=16&charset=utf8"
       MESSENGER_TRANSPORT_DSN: "redis://redis:6379/messages"
       INVOICE_DUE_DAYS: 15
+      RECEIPT_SIGNING_KEY: ${RECEIPT_SIGNING_KEY}
+      RECEIPT_VERIFY_BASE_URL: ${RECEIPT_VERIFY_BASE_URL}
       TZ: Africa/Abidjan
     depends_on:
       db: {condition: service_healthy}

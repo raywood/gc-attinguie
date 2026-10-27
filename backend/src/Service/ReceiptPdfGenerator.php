@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Entity\Payment;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
 use App\Enum\PaymentMethod;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -11,7 +13,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Un reçu par paiement. Le numéro est stable car l'identifiant du paiement
- * est unique et ne change pas (aucune migration requise pour ce MVP).
+ * est unique et ne change pas. Le token est persistant dans receipts.
  *
  * ATTENTION : le schéma actuel des paiements n'historise pas l'agent encaisseur.
  * Ce reçu de développement ne prétend donc pas identifier cet agent.
@@ -21,6 +23,7 @@ final class ReceiptPdfGenerator
     public function __construct(
         #[Autowire('%kernel.environment%')]
         private readonly string $environment,
+        private readonly ReceiptIssuer $issuer,
     ) {
     }
 
@@ -41,8 +44,14 @@ final class ReceiptPdfGenerator
 
     public function render(Payment $payment): string
     {
-        $invoice = $payment->getInvoice();
-        $business = $invoice->getBusiness();
+        // L'émission est idempotente : même reçu/token sur tous les téléchargements.
+        $receipt = $this->issuer->issueForPayment($payment);
+        if (!$this->issuer->isAuthentic($receipt) || $receipt->getStatus() !== 'issued') {
+            throw new \LogicException('Ce reçu est annulé ou son intégrité est compromise.');
+        }
+        $verificationUrl = $this->issuer->verificationUrl($receipt);
+        $qrCode = new QrCode(data: $verificationUrl, size: 220, margin: 12);
+        $qrCodeDataUri = (new PngWriter())->write($qrCode)->getDataUri();
 
         $options = new Options();
         $options->set('defaultFont', 'DejaVu Sans');
@@ -53,21 +62,22 @@ final class ReceiptPdfGenerator
         $dompdf = new Dompdf($options);
         $dompdf->setPaper('A4', 'portrait');
 
-        $number = self::escape($this->receiptNumber($payment));
-        $invoiceNumber = self::escape($invoice->getNumber());
-        $name = self::escape($business->getName());
-        $address = self::escape($business->getAddress() ?: 'Non renseignée');
-        $district = self::escape($business->getDistrict() ?: 'Non renseigné');
-        $reference = self::escape($payment->getReference() ?: 'Non renseignée');
-        $method = self::escape($this->methodLabel($payment->getMethod()));
-        $amount = self::escape(self::formatAmount($payment->getAmount()));
-        $invoiceTotal = self::escape(self::formatAmount($invoice->getTotal()));
-        $currency = self::escape($invoice->getCurrency());
-        $date = $payment->getReceivedAt()
+        $number = self::escape($receipt->getNumber());
+        $invoiceNumber = self::escape($receipt->getInvoiceNumber());
+        $name = self::escape($receipt->getBusinessName());
+        $address = self::escape($receipt->getBusinessAddress() ?: 'Non renseignée');
+        $district = self::escape($receipt->getBusinessDistrict() ?: 'Non renseigné');
+        $reference = self::escape($receipt->getReference() ?: 'Non renseignée');
+        $method = self::escape($this->methodLabel(PaymentMethod::from($receipt->getPaymentMethod())));
+        $amount = self::escape(self::formatAmount($receipt->getAmount()));
+        $invoiceTotal = self::escape(self::formatAmount($payment->getInvoice()->getTotal()));
+        $currency = self::escape($receipt->getCurrency());
+        $date = $receipt->getReceivedAt()
             ->setTimezone(new \DateTimeZone('Africa/Abidjan'))
             ->format('d/m/Y à H:i');
         $date = self::escape($date);
-        $period = self::escape($invoice->getPeriod()->format('m/Y'));
+        $period = self::escape($payment->getInvoice()->getPeriod()->format('m/Y'));
+        $verificationUrlEscaped = self::escape($verificationUrl);
         $demo = $this->environment !== 'prod'
             ? '<p class="demo">DOCUMENT DE TEST — ne constitue pas une quittance officielle</p>'
             : '';
@@ -91,6 +101,9 @@ h1 { font-size: 25px; margin: 8px 0 2px; color: #102448; }
 .amount { margin-top: 26px; background: #f2f5fa; padding: 18px; text-align: center; border-top: 2px solid #c69c49; }
 .amount .label { font-size: 11px; color: #48566d; }
 .amount .value { font-size: 23px; font-weight: bold; color: #102448; margin-top: 7px; }
+.qr { text-align: center; margin: 20px 0 0; }
+.qr img { width: 128px; height: 128px; }
+.qr p { font-size: 9px; color: #3c4861; }
 .footer { font-size: 9px; border-top: 1px solid #dbe0e8; padding-top: 12px; margin-top: 35px; color: #5a6475; }
 </style></head><body>
 <div class="header">
@@ -114,8 +127,12 @@ h1 { font-size: 25px; margin: 8px 0 2px; color: #102448; }
 </table>
 <div class="amount"><div class="label">MONTANT REÇU POUR CET ENCAISSEMENT</div>
 <div class="value">{$amount} {$currency}</div></div>
+<div class="qr">
+  <img src="{$qrCodeDataUri}" alt="QR de vérification">
+  <p>Scannez pour vérifier l'authenticité de ce reçu.<br>{$verificationUrlEscaped}</p>
+</div>
 <div class="footer">
-  Numérotation calculée à partir de l'identifiant unique du paiement.
+  Reçu signé et enregistré ; les informations peuvent être vérifiées sur le site municipal.
   Un paiement partiel donne lieu à un reçu distinct.
   Le système actuel n'historise pas l'identité de l'agent encaisseur : ne pas utiliser
   comme justificatif officiel avant ajout de l'audit et des contrôles réglementaires.
