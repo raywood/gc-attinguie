@@ -1,4 +1,5 @@
 <script setup>
+import FinanceExports from '../components/FinanceExports.vue'
 import { computed, onMounted, ref } from 'vue'
 import { api } from '../api'
 
@@ -72,6 +73,8 @@ onMounted(load)
         Les montants facturés et les soldes concernent les factures de {{ monthText(data.period) }}.
         L’annulation d’un reçu ne déduit pas son paiement.
       </p>
+
+      <FinanceExports :period="data.period" />
 
       <div class="finance-kpis">
         <article class="card finance-kpi">
