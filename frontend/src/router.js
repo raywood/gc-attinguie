@@ -11,6 +11,7 @@ export const router = createRouter({
     { path: '/commerces/:id/modifier', name: 'business-edit', component: () => import('./views/BusinessEditView.vue'), meta: { admin: true } },
     { path: '/factures', name: 'invoices', component: () => import('./views/InvoicesView.vue'), meta: { admin: true } },
     { path: '/annulations', name: 'cancellations', component: () => import('./views/CancellationsView.vue'), meta: { admin: true } },
+    { path: '/tableau-de-bord', name: 'financial-dashboard', component: () => import('./views/FinancialDashboardView.vue'), meta: { admin: true } },
   ],
 })
 
