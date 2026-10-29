@@ -5,6 +5,7 @@ namespace App\Controller;
 
 use App\Entity\Invoice;
 use App\Entity\Payment;
+use App\Entity\Receipt;
 use App\Enum\PaymentMethod;
 use App\Exception\PaymentRejectedException;
 use App\Service\PaymentRecorder;
@@ -147,12 +148,20 @@ final class InvoiceController extends AbstractController
     /** @return array<string, mixed> */
     private function paymentData(Payment $p): array
     {
+        // Lecture seule : l'état du justificatif est fourni au frontend sans divulguer son token.
+        $receipt = $this->em->getRepository(Receipt::class)->findOneBy(['payment' => $p]);
+
         return [
             'id' => $p->getId(),
             'amount' => $p->getAmount(),
             'method' => $p->getMethod()->value,
             'reference' => $p->getReference(),
             'receivedAt' => $p->getReceivedAt()->format(DATE_ATOM),
+            'receipt' => $receipt instanceof Receipt ? [
+                'id' => $receipt->getId(),
+                'number' => $receipt->getNumber(),
+                'status' => $receipt->getStatus(),
+            ] : null,
         ];
     }
 }

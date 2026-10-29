@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 /** Données figées d'un reçu : une ligne par paiement. */
 #[ORM\Entity]
 #[ORM\Table(name: 'receipts')]
+#[ORM\Index(name: 'idx_receipts_cancelled_by', columns: ['cancelled_by_user_id'])]
 #[ORM\UniqueConstraint(name: 'uniq_receipts_payment', columns: ['payment_id'])]
 #[ORM\UniqueConstraint(name: 'uniq_receipts_number', columns: ['number'])]
 #[ORM\UniqueConstraint(name: 'uniq_receipts_token', columns: ['verification_token'])]
@@ -62,6 +63,24 @@ class Receipt
 
     #[ORM\Column(length: 100, nullable: true)]
     private ?string $reference = null;
+
+    #[ORM\Column(name: 'cancelled_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $cancelledAt = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'cancelled_by_user_id', referencedColumnName: 'id', nullable: true, onDelete: 'RESTRICT')]
+    private ?User $cancelledBy = null;
+
+    #[ORM\Column(name: 'cancellation_reason', length: 500, nullable: true)]
+    private ?string $cancellationReason = null;
+
+    #[ORM\Column(name: 'cancelled_by_email', length: 180, nullable: true)]
+    private ?string $cancelledByEmail = null;
+
+    public function getCancelledByEmail(): ?string { return $this->cancelledByEmail; }
+    public function getCancelledAt(): ?\DateTimeImmutable { return $this->cancelledAt; }
+    public function getCancelledBy(): ?User { return $this->cancelledBy; }
+    public function getCancellationReason(): ?string { return $this->cancellationReason; }
 
     public function getId(): ?int { return $this->id; }
     public function getPayment(): Payment { return $this->payment; }

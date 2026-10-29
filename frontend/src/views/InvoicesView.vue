@@ -157,7 +157,23 @@ onMounted(load)
           <tr v-for="p in selected.payments" :key="p.id">
             <td>{{ new Date(p.receivedAt).toLocaleString('fr-FR') }}</td>
             <td>{{ methodLabels[p.method] || p.method }}</td><td>{{ p.reference }}</td><td>{{ money(p.amount) }}</td>
-            <td><a class="btn ghost" :href="`/api/payments/${p.id}/receipt`" download> Télécharger le reçu </a></td>
+            <td>
+              <template v-if="p.receipt?.status === 'cancelled'">
+                <div class="muted small">{{ p.receipt.number }} — Annulé</div>
+                <a class="btn ghost"
+                   :href="`/api/payments/${p.id}/receipt/administrative.pdf`"
+                   target="_blank" rel="noopener noreferrer">
+                  Consulter le PDF administratif
+                </a>
+              </template>
+              <template v-else-if="p.receipt?.status === 'issued'">
+                <div class="muted small">{{ p.receipt.number }} — Émis</div>
+                <a class="btn ghost" :href="`/api/payments/${p.id}/receipt`" download>
+                  Télécharger le reçu
+                </a>
+              </template>
+              <span v-else class="muted">Reçu non disponible</span>
+            </td>
           </tr>
           <tr v-if="!selected.payments.length"><td colspan="5" class="muted">Aucun paiement enregistré.</td></tr>
         </tbody>

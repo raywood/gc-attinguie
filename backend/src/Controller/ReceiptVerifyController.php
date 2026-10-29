@@ -48,9 +48,9 @@ final class ReceiptVerifyController extends AbstractController
         }
         $authentic = $issuer->isAuthentic($receipt);
         $valid = $authentic && $receipt->getStatus() === 'issued';
-        $heading = $valid ? 'Reçu valide' : 'Reçu non valide';
+        $heading = $valid ? 'Reçu valide' : ($authentic && $receipt->getStatus() === 'cancelled' ? 'Reçu annulé' : 'Reçu non valide');
         $message = $valid ? 'Ce reçu correspond à un encaissement enregistré.' :
-            ($authentic ? 'Ce reçu a été annulé.' : 'Incohérence détectée dans les données du reçu.');
+            ($authentic ? 'Ce justificatif a été révoqué par la mairie. Sa présentation ne prouve plus un encaissement valable.' : 'Incohérence détectée dans les données du reçu.');
         $details = '';
         if ($authentic) {
             $details = sprintf(
