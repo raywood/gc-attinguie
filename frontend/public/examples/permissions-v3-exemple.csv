@@ -1,0 +1,6 @@
+code;label;module;description
+commerces.read;Consulter les commerces;commerces;Autorisation à raccorder aux contrôleurs métier
+commerces.write;Modifier les commerces;commerces;Autorisation à raccorder aux contrôleurs métier
+recouvrement.read;Consulter les impayés;recouvrement;Autorisation à raccorder aux contrôleurs métier
+recouvrement.manage;Gérer les actions de recouvrement;recouvrement;Autorisation à raccorder aux contrôleurs métier
+rapports.export;Exporter les rapports;rapports;Autorisation à raccorder aux contrôleurs métier

@@ -4,6 +4,7 @@ import { auth } from './auth'
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
+    { path: '/roles-permissions', name: 'roles-permissions-v3', component: () => import('./views/RolesPermissionsV3View.vue'), meta: { admin: true } },
     { path: '/utilisateurs/administration', name: 'admin-users-v2', component: () => import('./views/UsersManagementV2View.vue'), meta: { admin: true } },
     { path: '/activation', name: 'account-activation', component: () => import('./views/AccountActivationView.vue'), meta: { public: true } },
     { path: '/utilisateurs', name: 'admin-users', component: () => import('./views/UsersAdminView.vue'), meta: { admin: true } },

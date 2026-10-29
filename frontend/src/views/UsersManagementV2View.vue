@@ -160,7 +160,8 @@ onMounted(async () => { await load(); await loadAudit() })
 <template>
   <section class="users-v2">
     <header class="row-head">
-      <div><h1>Administration avancée des utilisateurs</h1><p class="muted small">Modifier les profils, suspendre, réactiver, réinitialiser les accès et consulter le journal.</p></div>
+      <div><h1>Administration avancée des utilisateurs</h1>
+        <RouterLink class="btn ghost" to="/roles-permissions">Rôles et permissions (V3)</RouterLink><p class="muted small">Modifier les profils, suspendre, réactiver, réinitialiser les accès et consulter le journal.</p></div>
       <RouterLink class="btn ghost" to="/utilisateurs">Création et import CSV</RouterLink>
     </header>
     <p v-if="error" class="error" role="alert">{{ error }}</p>

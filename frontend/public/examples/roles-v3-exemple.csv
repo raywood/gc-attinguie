@@ -1,0 +1,4 @@
+code;label;description;permissions
+ROLE_CONTROLEUR;Contrôleur municipal;Consulte les commerces et impayés;commerces.read|recouvrement.read
+ROLE_SUPERVISEUR_RECOUVREMENT;Superviseur du recouvrement;Suivi avancé du recouvrement;commerces.read|recouvrement.read|recouvrement.manage
+ROLE_ASSISTANT_COMPTABLE;Assistant comptable;Consultation et export des rapports;rapports.export
