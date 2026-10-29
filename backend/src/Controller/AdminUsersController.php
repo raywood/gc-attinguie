@@ -161,10 +161,13 @@ final class AdminUsersController extends AbstractController
         $conn = $this->em->getConnection();
         return $conn->transactional(function (Connection $c) use ($id): JsonResponse {
             $r = $c->fetchAssociative(
-                'SELECT u.email, u.is_active, p.user_id FROM users u JOIN user_profiles p ON p.user_id = u.id WHERE u.id = :id FOR UPDATE OF u, p',
+                'SELECT u.email, u.is_active, p.user_id, p.activated_at AS invitation_prior_activation FROM users u JOIN user_profiles p ON p.user_id = u.id WHERE u.id = :id FOR UPDATE OF u, p',
                 ['id' => $id],
             );
             if ($r === false) { return $this->json(['error' => 'Compte introuvable.'], 404); }
+            if ($r['invitation_prior_activation'] !== null) {
+                return $this->json(['error' => 'Ce compte a déjà été activé : utilisez la gestion V2 des accès.'], 409);
+            }
             if (in_array($r['is_active'], [true, 1, '1', 't', 'true'], true)) {
                 return $this->json(['error' => 'Le compte est déjà actif.'], 409);
             }

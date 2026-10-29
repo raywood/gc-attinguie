@@ -137,7 +137,7 @@ onMounted(load)
 
 <template>
   <section class="users-admin">
-    <div class="row-head"><div><h1>Gestion des profils utilisateurs</h1><p class="muted small">Comptes municipaux · Création individuelle ou import CSV · Réservé aux administrateurs</p></div></div>
+    <div class="row-head"><div><h1>Gestion des profils utilisateurs</h1><RouterLink to="/utilisateurs/administration" class="btn ghost">Administration avancée (V2)</RouterLink><p class="muted small">Comptes municipaux · Création individuelle ou import CSV · Réservé aux administrateurs</p></div></div>
     <p v-if="error" class="error" role="alert" style="white-space:pre-line">{{ error }}</p>
     <p v-if="info" role="status" class="card">{{ info }}</p>
 
@@ -195,7 +195,7 @@ onMounted(load)
           <td>{{ [u.firstName, u.lastName].filter(Boolean).join(' ') || 'Compte existant' }}<div class="muted small">{{ u.jobTitle || '' }}</div></td>
           <td>{{ u.email }}</td><td>{{ u.roles.map(r => roleNames[r] || r).join(', ') }}</td>
           <td>{{ u.isActive ? 'Actif' : 'En attente d’activation' }}</td>
-          <td><button v-if="!u.isActive && u.firstName" class="btn ghost" type="button" :disabled="busy" @click="reinvite(u)">Renouveler l’invitation</button><span v-else class="muted">—</span></td>
+          <td><button v-if="!u.isActive && u.firstName && !u.activatedAt" class="btn ghost" type="button" :disabled="busy" @click="reinvite(u)">Renouveler l’invitation</button><span v-else class="muted">—</span></td>
         </tr><tr v-if="!userList.length && !loading"><td colspan="5">Aucun compte trouvé.</td></tr></tbody>
       </table></div>
       <div v-if="pages > 1" class="user-actions"><button class="btn ghost" :disabled="page <= 1" @click="goTo(page-1)">Précédent</button><span>Page {{ page }} / {{ pages }}</span><button class="btn ghost" :disabled="page >= pages" @click="goTo(page+1)">Suivant</button></div>
