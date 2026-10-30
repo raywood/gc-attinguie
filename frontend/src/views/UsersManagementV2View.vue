@@ -161,6 +161,7 @@ onMounted(async () => { await load(); await loadAudit() })
   <section class="users-v2">
     <header class="row-head">
       <div><h1>Administration avancée des utilisateurs</h1>
+        <RouterLink class="btn ghost" to="/roles-attributions">Attribuer les rôles (V3.1)</RouterLink>
         <RouterLink class="btn ghost" to="/roles-permissions">Rôles et permissions (V3)</RouterLink><p class="muted small">Modifier les profils, suspendre, réactiver, réinitialiser les accès et consulter le journal.</p></div>
       <RouterLink class="btn ghost" to="/utilisateurs">Création et import CSV</RouterLink>
     </header>
@@ -205,9 +206,9 @@ onMounted(async () => { await load(); await loadAudit() })
         <label>Nom <input v-model.trim="edit.last_name" required maxlength="80" /></label>
         <label>Téléphone <input v-model.trim="edit.phone" maxlength="32" /></label>
         <label>Fonction <input v-model.trim="edit.job_title" maxlength="120" /></label>
-        <label>Rôle <select v-model="edit.role" :disabled="isSelf(selected)"><option v-for="(name, role) in roleLabels" :key="role" :value="role">{{ name }}</option></select></label>
+        <label>Rôle <select v-model="edit.role" disabled><option v-for="(name, role) in roleLabels" :key="role" :value="role">{{ name }}</option></select></label>
       </div>
-      <p class="muted small">L'email n'est pas modifiable dans cette version. Les changements de rôle sont appliqués au serveur et obligent une reconnexion.</p>
+      <p class="muted small">L'email n'est pas modifiable dans cette version. Les rôles sont administrés dans la V3.1.</p>
       <div class="user-actions"><button type="submit" class="btn" :disabled="busy || !csrf">{{ busy ? 'Enregistrement…' : 'Enregistrer' }}</button><button type="button" class="btn ghost" @click="selected = null">Fermer</button></div>
     </form>
 

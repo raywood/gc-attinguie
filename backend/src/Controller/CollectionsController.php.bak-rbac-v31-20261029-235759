@@ -1,0 +1,154 @@
+<?php
+declare(strict_types=1);
+
+namespace App\Controller;
+
+use Doctrine\DBAL\Connection;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+/** État des soldes à recouvrer : consultation seule, sans écriture comptable. */
+#[Route('/api/admin/collections')]
+#[IsGranted('ROLE_ADMIN')]
+final class CollectionsController extends AbstractController
+{
+    #[Route('/outstanding', name: 'api_admin_collections_outstanding', methods: ['GET'])]
+    public function outstanding(Request $request, Connection $db): JsonResponse
+    {
+        $tz = new \DateTimeZone('Africa/Abidjan');
+        $period = trim((string) $request->query->get('period', (new \DateTimeImmutable('now', $tz))->format('Y-m')));
+        $state = trim((string) $request->query->get('state', 'all'));
+        $search = trim((string) $request->query->get('search', ''));
+        $pageRaw = (string) $request->query->get('page', '1');
+
+        if (!preg_match('/^20\d{2}-(0[1-9]|1[0-2])$/D', $period)) {
+            return $this->json(['error' => 'Période invalide (YYYY-MM).'], 422);
+        }
+        if (!in_array($state, ['all', 'overdue', 'upcoming', 'undated'], true)) {
+            return $this->json(['error' => 'Filtre de situation invalide.'], 422);
+        }
+        if (mb_strlen($search) > 80 || preg_match('/[\x00-\x1F\x7F]/', $search)) {
+            return $this->json(['error' => 'Recherche limitée à 80 caractères.'], 422);
+        }
+        if (!preg_match('/^[1-9]\d{0,5}$/D', $pageRaw)) {
+            return $this->json(['error' => 'Numéro de page invalide.'], 422);
+        }
+        $page = (int) $pageRaw;
+        $perPage = 20;
+        $start = new \DateTimeImmutable($period . '-01', $tz);
+        $today = new \DateTimeImmutable('today', $tz);
+        $params = [
+            'startDate' => $start->format('Y-m-d'),
+            'endDate' => $start->modify('+1 month')->format('Y-m-d'),
+            'today' => $today->format('Y-m-d'),
+        ];
+
+        // Les paiements sont d'abord agrégés par facture, ce qui évite de
+        // multiplier artificiellement les montants des factures multi-paiements.
+        // Un reçu annulé reste distinct du paiement qu'il justifiait.
+        $cte = <<<'SQL'
+WITH paid_by_invoice AS (
+    SELECT invoice_id, SUM(amount)::numeric(16,2) AS paid
+    FROM payments GROUP BY invoice_id
+), invoice_balances AS (
+    SELECT i.id, i.number, i.period, i.due_at, i.total::numeric(16,2) AS total,
+           COALESCE(p.paid, 0)::numeric(16,2) AS paid,
+           GREATEST(i.total - COALESCE(p.paid, 0), 0)::numeric(16,2) AS balance,
+           b.name AS business_name, b.district, a.label AS activity_label
+    FROM invoices i
+    JOIN businesses b ON b.id = i.business_id
+    JOIN activity_types a ON a.id = b.activity_type_id
+    LEFT JOIN paid_by_invoice p ON p.invoice_id = i.id
+    WHERE i.period >= :startDate AND i.period < :endDate
+      AND i.status IN ('issued', 'paid') AND i.currency = 'XOF'
+)
+SQL;
+
+        // Les indicateurs correspondent à toutes les factures émises de la période,
+        // avant application des filtres d'affichage et de la pagination.
+        $summary = $db->fetchAssociative($cte . <<<'SQL'
+SELECT COUNT(*) FILTER (WHERE balance > 0)::integer AS outstanding_count,
+       COALESCE(SUM(balance), 0)::numeric(16,2) AS remaining,
+       COUNT(*) FILTER (WHERE balance > 0 AND due_at < :today)::integer AS overdue_count,
+       COALESCE(SUM(balance) FILTER (WHERE due_at < :today), 0)::numeric(16,2) AS overdue_amount,
+       COUNT(*) FILTER (WHERE balance > 0 AND due_at >= :today)::integer AS upcoming_count,
+       COALESCE(SUM(balance) FILTER (WHERE due_at >= :today), 0)::numeric(16,2) AS upcoming_amount,
+       COUNT(*) FILTER (WHERE balance > 0 AND due_at IS NULL)::integer AS undated_count
+FROM invoice_balances WHERE balance > 0
+SQL, $params) ?: [];
+
+        $searchPattern = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search) . '%';
+        $filteredParams = $params + ['state' => $state, 'pattern' => $searchPattern];
+        $filter = <<<'SQL'
+WHERE balance > 0
+  AND (:state = 'all'
+       OR (:state = 'overdue' AND due_at < :today)
+       OR (:state = 'upcoming' AND due_at >= :today)
+       OR (:state = 'undated' AND due_at IS NULL))
+  AND (business_name ILIKE :pattern OR number ILIKE :pattern OR activity_label ILIKE :pattern)
+SQL;
+        $count = (int) $db->fetchOne($cte . 'SELECT COUNT(*) FROM invoice_balances ' . $filter, $filteredParams);
+
+        $rows = $db->fetchAllAssociative($cte . <<<'SQL'
+SELECT id, number, business_name, district, activity_label,
+       to_char(due_at, 'YYYY-MM-DD') AS due_date,
+       total, paid, balance,
+       CASE WHEN due_at IS NULL THEN 'undated'
+            WHEN due_at < :today THEN 'overdue'
+            ELSE 'upcoming' END AS state,
+       CASE WHEN due_at < :today THEN (CAST(:today AS date) - due_at) ELSE 0 END AS days_overdue
+FROM invoice_balances
+SQL . $filter . <<<'SQL'
+ORDER BY CASE WHEN due_at < :today THEN 0 WHEN due_at IS NULL THEN 2 ELSE 1 END,
+         due_at ASC NULLS LAST, number ASC
+LIMIT :limit OFFSET :offset
+SQL, $filteredParams + ['limit' => $perPage, 'offset' => ($page - 1) * $perPage], [
+            'limit' => \Doctrine\DBAL\ParameterType::INTEGER,
+            'offset' => \Doctrine\DBAL\ParameterType::INTEGER,
+        ]);
+
+        $items = [];
+        foreach ($rows as $row) {
+            $items[] = [
+                'invoiceId' => (int) $row['id'],
+                'invoiceNumber' => (string) $row['number'],
+                'business' => (string) $row['business_name'],
+                'district' => (string) ($row['district'] ?? ''),
+                'activity' => (string) $row['activity_label'],
+                'dueDate' => $row['due_date'] !== null ? (string) $row['due_date'] : null,
+                'total' => (string) $row['total'],
+                'paid' => (string) $row['paid'],
+                'balance' => (string) $row['balance'],
+                'state' => (string) $row['state'],
+                'daysOverdue' => (int) $row['days_overdue'],
+            ];
+        }
+
+        return $this->json([
+            'period' => $period,
+            'currency' => 'XOF',
+            'asOf' => $today->format('Y-m-d'),
+            'summary' => [
+                'remaining' => (string) ($summary['remaining'] ?? '0.00'),
+                'overdueAmount' => (string) ($summary['overdue_amount'] ?? '0.00'),
+                'upcomingAmount' => (string) ($summary['upcoming_amount'] ?? '0.00'),
+                'outstandingCount' => (int) ($summary['outstanding_count'] ?? 0),
+                'overdueCount' => (int) ($summary['overdue_count'] ?? 0),
+                'upcomingCount' => (int) ($summary['upcoming_count'] ?? 0),
+                'undatedCount' => (int) ($summary['undated_count'] ?? 0),
+            ],
+            'filters' => ['state' => $state, 'search' => $search],
+            'pagination' => [
+                'page' => $page,
+                'perPage' => $perPage,
+                'total' => $count,
+                'pages' => max(1, (int) ceil($count / $perPage)),
+            ],
+            'items' => $items,
+            'notice' => 'Lecture seule. Un reçu annulé ne constitue pas un remboursement et ne réduit pas le paiement.',
+        ]);
+    }
+}

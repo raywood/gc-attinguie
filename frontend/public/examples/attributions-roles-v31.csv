@@ -1,0 +1,4 @@
+email;roles
+agent-test@example.invalid;ROLE_AGENT
+regisseur-test@example.invalid;ROLE_REGISSEUR|ROLE_AGENT
+comptable-test@example.invalid;ROLE_COMPTABLE

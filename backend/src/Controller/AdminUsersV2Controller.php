@@ -54,6 +54,7 @@ final class AdminUsersV2Controller extends AbstractController
             $oldRoles = $this->decodeRoles($row['roles']);
             $oldRole = $this->mainRole($oldRoles);
             $roleChanged = $oldRole !== $data['role'];
+            if ($roleChanged) return $this->json(['error' => 'Modifier les rôles depuis l’écran Attribution V3.1.'], 409);
             if ($roleChanged && $id === $actorId) {
                 return $this->json(['error' => 'Vous ne pouvez pas modifier votre propre rôle.'], 409);
             }

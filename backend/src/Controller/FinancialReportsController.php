@@ -15,7 +15,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /** Exports financiers pour la mairie, en lecture seule. */
 #[Route('/api/admin/reports/finance')]
-#[IsGranted('ROLE_ADMIN')]
+#[IsGranted('finance.export')]
 final class FinancialReportsController extends AbstractController
 {
     /** @return array{0:string,1:string,2:string,3:string} */

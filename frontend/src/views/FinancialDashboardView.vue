@@ -1,4 +1,5 @@
 <script setup>
+import { can } from '../security/abilities'
 import FinanceExports from '../components/FinanceExports.vue'
 import { computed, onMounted, ref } from 'vue'
 import { api } from '../api'
@@ -74,7 +75,7 @@ onMounted(load)
         L’annulation d’un reçu ne déduit pas son paiement.
       </p>
 
-      <FinanceExports :period="data.period" />
+      <FinanceExports v-if="can('finance.export')" :period="data.period" />
 
       <div class="finance-kpis">
         <article class="card finance-kpi">

@@ -12,7 +12,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /** Tableau financier municipal : agrégations en lecture seule, montants en XOF. */
 #[Route('/api/admin/dashboard')]
-#[IsGranted('ROLE_ADMIN')]
+#[IsGranted('finance.read')]
 final class FinancialDashboardController extends AbstractController
 {
     #[Route('/financial', name: 'api_admin_financial_dashboard', methods: ['GET'])]

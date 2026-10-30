@@ -89,7 +89,7 @@ function chooseRole(role) {
 }
 async function saveRolePermissions() {
   if (busy.value || !selectedRole.value) return
-  if (!window.confirm(`Remplacer les permissions associées à ${selectedRole.value.code} dans le catalogue ? Les droits Symfony réels ne seront pas modifiés.`)) return
+  if (!window.confirm(`Remplacer les permissions associées à ${selectedRole.value.code} dans le catalogue ? Les accès aux API raccordées seront modifiés immédiatement pour les utilisateurs concernés.`)) return
   busy.value = true; error.value = ''; info.value = ''
   try {
     await send(`/api/admin/rbac/roles/${selectedRole.value.id}/permissions`, { permissions: selectedPermissions.value }, 'PUT')
@@ -136,12 +136,13 @@ onMounted(load)
     <header class="head">
       <div>
         <h1>Rôles et permissions — V3</h1>
+        <RouterLink class="v3-btn secondary" to="/roles-attributions">Attribuer les rôles (V3.1)</RouterLink>
         <p class="sub">Création individuelle, imports CSV, associations et consultation du catalogue municipal.</p>
       </div>
       <RouterLink class="v3-btn secondary" to="/utilisateurs/administration">← Utilisateurs V2</RouterLink>
     </header>
 
-    <div class="notice"><strong>Étape catalogue uniquement.</strong> Les rôles et permissions créés ici ne donnent pas encore accès aux écrans ou API. L'attribution aux utilisateurs et l'application des règles Symfony seront développées séparément.</div>
+    <div class="notice"><strong>Catalogue V3 + raccordement V3.1.</strong> Les permissions raccordées par la V3.1 sont maintenant appliquées aux API municipales. Les autres permissions du catalogue restent déclaratives tant qu’aucun contrôleur ne les utilise.</div>
     <p v-if="error" class="alert error" role="alert">{{ error }}</p>
     <p v-if="info" class="alert success" role="status">{{ info }}</p>
     <div class="metrics">
