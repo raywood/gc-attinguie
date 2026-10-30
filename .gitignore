@@ -28,3 +28,6 @@ redis_data/
 
 # Système
 .DS_Store
+
+# Photos personnelles locales (ne pas versionner)
+/backend/var/profile-photos/

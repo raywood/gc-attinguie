@@ -24,6 +24,7 @@ async function onLogout() {
           <RouterLink v-if="auth.user?.roles?.includes('ROLE_ADMIN')" to="/utilisateurs">Utilisateurs</RouterLink>
           <RouterLink v-if="auth.user?.roles?.includes('ROLE_ADMIN')" to="/roles-permissions">Rôles &amp; permissions</RouterLink>
       <RouterLink v-if="isAdministrator()" to="/roles-attributions">Attributions des rôles</RouterLink>
+      <RouterLink to="/mon-profil">Mon profil</RouterLink>
     </nav>
     <span class="spacer"></span>
     <span class="muted hide-sm">{{ auth.user.email }}</span>

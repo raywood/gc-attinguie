@@ -182,7 +182,7 @@ onMounted(async () => { await load(); await loadAudit() })
       <div class="table-wrap"><table><thead><tr><th>Utilisateur</th><th>Rôle</th><th>État</th><th>Actions</th></tr></thead>
         <tbody>
           <tr v-for="row in accounts" :key="row.id">
-            <td><strong>{{ [row.firstName, row.lastName].filter(Boolean).join(' ') || 'Compte historique' }}</strong><div class="muted small">{{ row.email }} · #{{ row.id }}</div></td>
+            <td><div class="gc-admin-user"><img class="gc-admin-photo" :src="`/api/account/photo/${row.id}`" alt="" loading="lazy" @error="$event.target.style.display = 'none'" /><div><strong>{{ [row.firstName, row.lastName].filter(Boolean).join(' ') || 'Compte historique' }}</strong><div class="muted small">{{ row.email }} · #{{ row.id }}</div></div></div></td>
             <td>{{ roleLabels[roleOf(row)] }}</td>
             <td>{{ activeState(row) }}</td>
             <td><div class="user-actions">
@@ -237,4 +237,7 @@ onMounted(async () => { await load(); await loadAudit() })
 .users-v2 .form-grid label { display:grid; gap:.3rem; }
 .users-v2 .invite-panel input { width:100%; max-width:100%; }
 .users-v2 td { vertical-align:top; }
+
+.gc-admin-user { display:flex; align-items:center; gap:.65rem; min-width:210px; }
+.gc-admin-photo { width:42px; height:42px; object-fit:cover; border-radius:50%; flex:none; background:#e2e8f0; }
 </style>

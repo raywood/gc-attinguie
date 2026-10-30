@@ -192,7 +192,7 @@ onMounted(load)
       <p v-if="loading" class="muted">Chargement…</p>
       <div class="table-wrap"><table><thead><tr><th>Agent</th><th>E-mail</th><th>Rôle</th><th>État</th><th>Action</th></tr></thead>
         <tbody><tr v-for="u in userList" :key="u.id">
-          <td>{{ [u.firstName, u.lastName].filter(Boolean).join(' ') || 'Compte existant' }}<div class="muted small">{{ u.jobTitle || '' }}</div></td>
+          <td><div class="gc-list-user"><img class="gc-list-photo" :src="`/api/account/photo/${u.id}`" alt="" loading="lazy" @error="$event.target.style.display = 'none'" /><div>{{ [u.firstName, u.lastName].filter(Boolean).join(' ') || 'Compte existant' }}<div class="muted small">{{ u.jobTitle || '' }}</div></div></div></td>
           <td>{{ u.email }}</td><td>{{ u.roles.map(r => roleNames[r] || r).join(', ') }}</td>
           <td>{{ u.isActive ? 'Actif' : 'En attente d’activation' }}</td>
           <td><button v-if="!u.isActive && u.firstName && !u.activatedAt" class="btn ghost" type="button" :disabled="busy" @click="reinvite(u)">Renouveler l’invitation</button><span v-else class="muted">—</span></td>
@@ -210,4 +210,7 @@ onMounted(load)
 .user-actions { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin: .75rem 0; }
 .user-actions input { min-width: 240px; flex: 1; }
 .users-admin section.card { margin-bottom: 1rem; }
+
+.gc-list-user { display:flex; align-items:center; gap:.6rem; min-width:170px; }
+.gc-list-photo { width:38px; height:38px; object-fit:cover; border-radius:50%; flex:none; background:#e2e8f0; }
 </style>

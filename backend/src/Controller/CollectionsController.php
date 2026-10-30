@@ -83,7 +83,7 @@ SQL, $params) ?: [];
         $searchPattern = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search) . '%';
         $filteredParams = $params + ['state' => $state, 'pattern' => $searchPattern];
         $filter = <<<'SQL'
-WHERE balance > 0
+ WHERE balance > 0
   AND (:state = 'all'
        OR (:state = 'overdue' AND due_at < :today)
        OR (:state = 'upcoming' AND due_at >= :today)

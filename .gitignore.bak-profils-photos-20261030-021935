@@ -1,0 +1,30 @@
+# Symfony / PHP
+vendor/
+var/
+.phpunit.cache/
+
+# Vue.js / Node
+node_modules/
+dist/
+
+# Variables d'environnement
+.env
+.env.*
+!.env.example
+
+# Identifiants et clés
+auth.json
+*.pem
+*.key
+
+# Données Docker locales
+postgres_data/
+mysql_data/
+redis_data/
+
+# IDE
+.idea/
+.vscode/
+
+# Système
+.DS_Store
