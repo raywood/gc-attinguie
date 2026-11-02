@@ -27,5 +27,6 @@ security:
     access_control:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/receipts/verify/, roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: "^/api/public/businesses/[a-f0-9]{64}$", roles: PUBLIC_ACCESS, methods: [GET] }
         - { path: ^/api/activate-account$, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: ROLE_USER }

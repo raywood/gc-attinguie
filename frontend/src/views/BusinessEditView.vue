@@ -2,6 +2,7 @@
 import { reactive, ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { api, ApiError } from '../api'
+import BusinessQrCode from '../components/BusinessQrCode.vue'
 
 const route = useRoute()
 const id = String(route.params.id)
@@ -114,4 +115,5 @@ async function save() {
       <button type="submit" class="btn" :disabled="saving">{{ saving ? 'Enregistrement…' : 'Enregistrer les modifications' }}</button>
     </div>
   </form>
+  <BusinessQrCode v-if="!loading && types.length" :business-id="id" />
 </template>

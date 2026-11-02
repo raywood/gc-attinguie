@@ -33,6 +33,19 @@ class Business
     #[ORM\Column(length: 20, enumType: BusinessStatus::class)]
     private BusinessStatus $status = BusinessStatus::Active;
 
+    /** Identifiant public non prévisible ; indépendant du statut et du gérant. */
+    #[ORM\Column(name: 'qr_public_token', length: 64, unique: true)]
+    private string $qrPublicToken;
+
+    #[ORM\Column(name: 'qr_created_at', type: Types::DATETIMETZ_IMMUTABLE)]
+    private \DateTimeImmutable $qrCreatedAt;
+
+    #[ORM\Column(name: 'qr_revoked_at', type: Types::DATETIMETZ_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $qrRevokedAt = null;
+
+    #[ORM\Column(name: 'qr_version')]
+    private int $qrVersion = 1;
+
     #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
@@ -43,7 +56,23 @@ class Business
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
+        $this->qrCreatedAt = $this->createdAt;
+        $this->qrPublicToken = bin2hex(random_bytes(32));
         $this->managers = new ArrayCollection();
+    }
+
+    public function getQrPublicToken(): string { return $this->qrPublicToken; }
+    public function getQrCreatedAt(): \DateTimeImmutable { return $this->qrCreatedAt; }
+    public function getQrRevokedAt(): ?\DateTimeImmutable { return $this->qrRevokedAt; }
+    public function getQrVersion(): int { return $this->qrVersion; }
+
+    /** Réémission manuelle réservée au personnel habilité ; l'ancien QR devient invalide. */
+    public function reissueQrCode(): void
+    {
+        $this->qrPublicToken = bin2hex(random_bytes(32));
+        $this->qrCreatedAt = new \DateTimeImmutable();
+        $this->qrRevokedAt = null;
+        ++$this->qrVersion;
     }
 
     public function getId(): ?int { return $this->id; }

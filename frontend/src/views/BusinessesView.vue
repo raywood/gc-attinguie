@@ -67,7 +67,7 @@ onMounted(load)
           <th>Quartier</th>
           <th>Gérant</th>
           <th>Statut</th>
-          <th v-if="auth.user?.roles?.includes('ROLE_ADMIN')">Actions</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -86,12 +86,13 @@ onMounted(load)
             <span v-else class="muted">—</span>
           </td>
           <td><span class="badge" :class="b.status">{{ statusLabels[b.status] ?? b.status }}</span></td>
-          <td v-if="auth.user?.roles?.includes('ROLE_ADMIN')">
-            <RouterLink class="btn ghost" :to="{ name: 'business-edit', params: { id: b.id } }">Modifier</RouterLink>
+          <td>
+            <RouterLink class="btn ghost" :to="{ name: 'business-qr', params: { id: b.id } }">QR Code</RouterLink>
+            <RouterLink v-if="auth.user?.roles?.includes('ROLE_ADMIN')" class="btn ghost" :to="{ name: 'business-edit', params: { id: b.id } }">Modifier</RouterLink>
           </td>
         </tr>
         <tr v-if="!loading && !items.length">
-          <td :colspan="auth.user?.roles?.includes('ROLE_ADMIN') ? 6 : 5" class="muted center">Aucun commerce.</td>
+          <td :colspan="6" class="muted center">Aucun commerce.</td>
         </tr>
       </tbody>
     </table>
