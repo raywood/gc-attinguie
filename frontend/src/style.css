@@ -43,3 +43,37 @@ tr:last-child td { border-bottom: 0; }
 .actions, .pager { display: flex; align-items: center; gap: .75rem; margin-top: 1rem; flex-wrap: wrap; }
 .pager { justify-content: center; }
 @media (max-width: 640px) { .hide-sm { display: none; } }
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8vh 1rem 2rem;
+}
+
+.login-card {
+  position: relative;
+  overflow: hidden;
+  max-width: 430px;
+  width: 100%;
+  min-height: 420px;
+}
+
+.login-watermark {
+  position: absolute;
+  inset: 0;
+  background-image: url('/gc-attinguie-logo.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 78%;
+  opacity: 0.25;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.login-content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 1rem;
+}
