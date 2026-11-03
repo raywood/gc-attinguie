@@ -6,6 +6,7 @@ namespace App\Controller;
 use App\Entity\User;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,14 +33,15 @@ final class AdminUsersV2Controller extends AbstractController
         if (!$this->validCsrf($request)) return $this->json(['error' => 'Jeton CSRF invalide. Rechargez la page.'], 403);
         $data = $this->jsonBody($request);
         if ($data instanceof JsonResponse) return $data;
-        $expected = ['first_name','last_name','phone','job_title','role'];
+        $expected = ['email','first_name','last_name','phone','job_title','role'];
         if (array_diff(array_keys($data), $expected) || array_diff($expected, array_keys($data))) {
-            return $this->json(['error' => 'Champs attendus : first_name, last_name, phone, job_title, role.'], 422);
+            return $this->json(['error' => 'Champs attendus : email, first_name, last_name, phone, job_title, role.'], 422);
         }
         foreach ($expected as $key) {
             if (!is_string($data[$key])) return $this->json(['error' => 'Valeur invalide : ' . $key], 422);
             $data[$key] = trim($data[$key]);
         }
+        $data['email'] = mb_strtolower($data['email']);
         $data['role'] = strtoupper($data['role']);
         if (!$this->validText($data['first_name'], 80, true) || !$this->validText($data['last_name'], 80, true)
             || !$this->validText($data['phone'], 32) || !$this->validText($data['job_title'], 120)
@@ -47,13 +49,29 @@ final class AdminUsersV2Controller extends AbstractController
             return $this->json(['error' => 'Nom, prénom, téléphone, fonction ou rôle invalide.'], 422);
         }
         $actorId = $this->actorId();
-        return $this->conn->transactional(function (Connection $c) use ($id, $actorId, $data): JsonResponse {
+        try {
+            return $this->conn->transactional(function (Connection $c) use ($id, $actorId, $data): JsonResponse {
             $this->serializeSecurityMutations($c);
             $row = $this->loadLocked($c, $id);
             if ($row === false) return $this->json(['error' => 'Utilisateur introuvable.'], 404);
             $oldRoles = $this->decodeRoles($row['roles']);
             $oldRole = $this->mainRole($oldRoles);
             $roleChanged = $oldRole !== $data['role'];
+            $emailChanged = $row['email'] !== $data['email'];
+            // L'adresse historique peut être fictive; seule une nouvelle adresse doit être validée.
+            if ($emailChanged && (strlen($data['email']) > 180 || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)
+                || preg_match('/\.(?:invalid|example|test|localhost)$/i', substr(strrchr($data['email'], '@'), 1)))) {
+                return $this->json(['error' => 'Adresse e-mail invalide ou domaine de test réservé.'], 422);
+            }
+            if ($emailChanged && $id === $actorId) {
+                return $this->json(['error' => 'Pour modifier votre propre e-mail, utilisez une procédure dédiée.'], 409);
+            }
+            if ($emailChanged && $c->fetchOne(
+                'SELECT 1 FROM users WHERE LOWER(email) = :email AND id <> :id LIMIT 1',
+                ['email' => $data['email'], 'id' => $id],
+            ) !== false) {
+                return $this->json(['error' => 'Cette adresse e-mail est déjà utilisée.'], 409);
+            }
             if ($roleChanged) return $this->json(['error' => 'Modifier les rôles depuis l’écran Attribution V3.1.'], 409);
             if ($roleChanged && $id === $actorId) {
                 return $this->json(['error' => 'Vous ne pouvez pas modifier votre propre rôle.'], 409);
@@ -81,18 +99,27 @@ final class AdminUsersV2Controller extends AbstractController
                     'created_at' => gmdate('Y-m-d H:i:sP'),
                 ]);
             }
+            if ($emailChanged) {
+                $c->update('users', ['email' => $data['email']], ['id' => $id]);
+                $changed[] = 'email';
+            }
             if ($roleChanged) {
                 $c->update('users', ['roles' => json_encode([$data['role']], JSON_THROW_ON_ERROR)], ['id' => $id]);
             }
             if ($changed !== [] || $roleChanged) {
                 $this->log($c, $actorId, $id, 'user_updated', [
                     'changedFields' => $changed,
+                    'emailBefore' => $emailChanged ? $row['email'] : null,
+                    'emailAfter' => $emailChanged ? $data['email'] : null,
                     'roleBefore' => $roleChanged ? $oldRole : null,
                     'roleAfter' => $roleChanged ? $data['role'] : null,
                 ]);
             }
             return $this->json(['ok' => true, 'changedFields' => $changed, 'roleChanged' => $roleChanged]);
-        });
+            });
+        } catch (UniqueConstraintViolationException) {
+            return $this->json(['error' => 'Cette adresse e-mail est déjà utilisée.'], 409);
+        }
     }
 
     #[Route('/{id<\d+>}/status', name: 'api_admin_users_v2_status', methods: ['POST'])]

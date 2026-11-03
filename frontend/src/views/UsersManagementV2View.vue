@@ -11,7 +11,7 @@ const pageSize = ref(20)
 const search = ref('')
 const csrf = ref('')
 const selected = ref(null)
-const edit = ref({ first_name: '', last_name: '', phone: '', job_title: '', role: 'ROLE_AGENT' })
+const edit = ref({ email: '', first_name: '', last_name: '', phone: '', job_title: '', role: 'ROLE_AGENT' })
 const audit = ref([])
 const auditTotal = ref(0)
 const auditPage = ref(1)
@@ -26,7 +26,7 @@ const roleLabels = {
   ROLE_COMPTABLE: 'Comptable', ROLE_AGENT: 'Agent municipal',
 }
 const actionLabels = {
-  user_updated: 'Profil / rôle modifié', user_suspended: 'Compte suspendu',
+  user_updated: 'Profil / e-mail modifié', user_suspended: 'Compte suspendu',
   user_reactivated: 'Compte réactivé', password_reset_requested: 'Réinitialisation demandée',
 }
 const accountPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
@@ -59,7 +59,7 @@ async function load() {
 function choose(row) {
   selected.value = row
   edit.value = {
-    first_name: row.firstName || '', last_name: row.lastName || '',
+    email: row.email || '', first_name: row.firstName || '', last_name: row.lastName || '',
     phone: row.phone || '', job_title: row.jobTitle || '', role: roleOf(row),
   }
   message.value = ''
@@ -83,6 +83,12 @@ async function save() {
     error.value = 'Le changement de votre propre rôle est interdit.'
     return
   }
+  const emailChanged = edit.value.email.trim().toLowerCase() !== selected.value.email.toLowerCase()
+  if (emailChanged && isSelf(selected.value)) {
+    error.value = 'La modification de votre propre e-mail nécessite une procédure dédiée.'
+    return
+  }
+  if (emailChanged && !confirm(`Remplacer l’adresse ${selected.value.email} par ${edit.value.email.trim()} ? Le titulaire devra utiliser la nouvelle adresse pour se connecter.`)) return
   if (edit.value.role !== roleOf(selected.value) && !confirm(`Changer le rôle de ${selected.value.email} ? Sa session devra être renouvelée.`)) return
   busy.value = true
   error.value = ''; message.value = ''
@@ -92,7 +98,7 @@ async function save() {
     await load()
     const current = accounts.value.find(x => x.id === id)
     if (current) choose(current)
-    message.value = 'Profil enregistré. Un changement de rôle impose une nouvelle connexion au titulaire.'
+    message.value = emailChanged ? 'Adresse e-mail modifiée. Le titulaire devra se connecter avec sa nouvelle adresse.' : 'Profil enregistré.'
     await loadAudit()
   } catch (e) { error.value = e.message }
   finally { busy.value = false }
@@ -202,13 +208,14 @@ onMounted(async () => { await load(); await loadAudit() })
     <form v-if="selected" class="card edit-form" @submit.prevent="save">
       <h2>Modifier : {{ selected.email }}</h2>
       <div class="form-grid">
+        <label>Adresse e-mail <input v-model.trim="edit.email" type="email" required maxlength="180" autocomplete="off" /></label>
         <label>Prénom <input v-model.trim="edit.first_name" required maxlength="80" /></label>
         <label>Nom <input v-model.trim="edit.last_name" required maxlength="80" /></label>
         <label>Téléphone <input v-model.trim="edit.phone" maxlength="32" /></label>
         <label>Fonction <input v-model.trim="edit.job_title" maxlength="120" /></label>
         <label>Rôle <select v-model="edit.role" disabled><option v-for="(name, role) in roleLabels" :key="role" :value="role">{{ name }}</option></select></label>
       </div>
-      <p class="muted small">L'email n'est pas modifiable dans cette version. Les rôles sont administrés dans la V3.1.</p>
+      <p class="muted small">La nouvelle adresse doit être unique et réelle. Les rôles restent administrés dans la V3.1. Les changements sont journalisés.</p>
       <div class="user-actions"><button type="submit" class="btn" :disabled="busy || !csrf">{{ busy ? 'Enregistrement…' : 'Enregistrer' }}</button><button type="button" class="btn ghost" @click="selected = null">Fermer</button></div>
     </form>
 
