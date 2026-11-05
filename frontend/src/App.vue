@@ -1,4 +1,5 @@
 <script setup>
+import GcToastHost from './components/GcToastHost.vue'
 import { computed, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { can, isAdministrator } from './security/abilities'
@@ -106,4 +107,5 @@ async function onLogout() {
     </div>
   </div>
   <main v-else class="gc-public-main"><RouterView /></main>
+  <GcToastHost />
 </template>
