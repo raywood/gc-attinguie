@@ -10,6 +10,8 @@ import './vendor/bootstrap.min.css'
 import './style.css'
 import './styles/gc-brand.css'
 import './styles/gc-toasts.css'
+import './styles/gc-buttons-orange.css'
+import './styles/gc-catalog.css'
 
 api.onUnauthorized = () => {
   auth.user = null

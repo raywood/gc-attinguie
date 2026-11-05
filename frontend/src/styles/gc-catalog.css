@@ -1,0 +1,24 @@
+.gc-catalog { display: grid; gap: 1rem; padding-bottom: 2rem; }
+.gc-catalog-heading { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; }
+.gc-catalog-heading h1 { color: #075e3d; font-size: clamp(1.35rem, 2.3vw, 1.9rem); font-weight: 850; margin: 0 0 .25rem; }
+.gc-catalog-heading p { color: #66786e; margin: 0; font-size: .9rem; }
+.gc-catalog-actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .8rem; align-items: end; }
+.gc-catalog-actions label { min-width: 200px; max-width: 365px; flex: 1; font-size: .85rem; color: #2a4940; }
+.gc-catalog-actions input, .gc-catalog-actions select { min-height: 40px; background: #fff; }
+.gc-catalog-panel { background: #fff; border: 1px solid #dae5dd; border-radius: 14px; box-shadow: 0 4px 14px #092b180d; padding: 1rem; }
+.gc-catalog-panel h2 { color: #0c5035; margin-bottom: .85rem; font-size: 1.13rem; font-weight: 800; }
+.gc-catalog-form { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .85rem 1rem; }
+.gc-catalog-form label { display: grid; gap: .35rem; font-weight: 650; color: #224b39; font-size: .9rem; }
+.gc-catalog-form input, .gc-catalog-form select { min-height: 41px; background: #fff; }
+.gc-catalog-help { grid-column: 1/-1; font-size: .82rem; color: #677b6c; margin: 0; }
+.gc-catalog-inline { grid-column: 1/-1; display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+.gc-catalog-scroll { overflow-x: auto; }
+.gc-catalog-scroll table { min-width: 670px; }
+.gc-catalog-scroll .gc-catalog-inline { white-space: nowrap; }
+.gc-catalog-checkbox { display: flex !important; align-items: center; gap: .6rem !important; min-height: 42px; }
+.gc-catalog-checkbox input { width: 18px; height: 18px; min-height: auto; accent-color: #E86D00; }
+.gc-catalog-notice { border-left: 4px solid #F97300; border-radius: 7px; background: #fff6e8; color: #68431a; padding: .8rem 1rem; font-size: .88rem; }
+.gc-catalog-status { background: #e3f7e9; border-radius: 6px; color: #075e3d; padding: .23rem .5rem; font-weight: 750; font-size: .79rem; }
+.gc-catalog-status.is-inactive { background: #f4ecdf; color: #795a2c; }
+.gc-catalog-empty { text-align: center; color: #69786e; padding: 1.3rem !important; }
+@media (max-width: 700px) { .gc-catalog-form { grid-template-columns: minmax(0,1fr); }.gc-catalog-heading > .btn { width: 100%; }.gc-catalog-actions > .btn { width: 100%; } }

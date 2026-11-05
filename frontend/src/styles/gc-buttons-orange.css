@@ -1,0 +1,45 @@
+/* GC-ATTINGUIÉ : boutons d'action orange, avec exceptions sémantiques de sécurité.
+   Chargé APRÈS Bootstrap, gc-brand et gc-toasts. Ne change jamais la couleur des toasts. */
+:root { --gc-action-orange: #E86D00; --gc-action-orange-hover: #C85600; }
+
+.gc-shell :is(button.btn, a.btn, input[type="submit"], button.gc-page-btn, button.gc-mobile-menu, button.gc-logout, button.gc-icon-button),
+.gc-public-main :is(button.btn, a.btn, input[type="submit"]) {
+  background: var(--gc-action-orange);
+  border-color: var(--gc-action-orange);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(232, 109, 0, .20);
+  font-weight: 650;
+}
+.gc-shell :is(button.btn, a.btn, input[type="submit"], button.gc-page-btn, button.gc-mobile-menu, button.gc-logout, button.gc-icon-button):hover:not(:disabled),
+.gc-public-main :is(button.btn, a.btn, input[type="submit"]):hover:not(:disabled) {
+  background: var(--gc-action-orange-hover);
+  border-color: var(--gc-action-orange-hover);
+  color: #fff;
+}
+.gc-shell :is(button.btn, a.btn, input[type="submit"], button.gc-page-btn, button.gc-mobile-menu, button.gc-logout, button.gc-icon-button):focus-visible,
+.gc-public-main :is(button.btn, a.btn, input[type="submit"]):focus-visible {
+  outline: 3px solid #FFB34D;
+  outline-offset: 2px;
+}
+/* Suppression/risque : conserver le rouge au lieu de tromper l'utilisateur. */
+.gc-shell button.btn-danger,
+.gc-shell a.btn-danger,
+.gc-shell input.btn-danger {
+  background: #BD2838;
+  border-color: #BD2838;
+  color: #fff;
+}
+.gc-shell button.btn-danger:hover:not(:disabled),
+.gc-shell a.btn-danger:hover {
+  background: #9F1F2E;
+  border-color: #9F1F2E;
+  color: #fff;
+}
+.gc-shell button:disabled, .gc-public-main button:disabled { opacity: .55; cursor: not-allowed; }
+/* Petites actions de texte : orange pour rester lisibles sans pavé orange. */
+.gc-shell .gc-filter-scope button,
+.gc-shell button.btn-link { background: transparent; border-color: transparent; color: #AA4800; box-shadow: none; }
+.gc-shell .gc-filter-scope button:hover,
+.gc-shell button.btn-link:hover { color: #793700; background: transparent; }
+/* Ne JAMAIS changer la fermeture des notifications vertes. */
+.gc-toast-region button.gc-toast-close { background: transparent; box-shadow: none; color: #fff; }

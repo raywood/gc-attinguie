@@ -12,6 +12,8 @@ const menuOpen = ref(false)
 const headerSearch = ref('')
 const isAdmin = computed(() => isAdministrator())
 const pageTitle = computed(() => {
+  if (route.path.startsWith('/catalogue/activites')) return 'Activités commerciales'
+  if (route.path.startsWith('/catalogue/tarifs')) return 'Grille tarifaire'
   if (route.path.startsWith('/tableau-de-bord')) return 'Tableau de bord'
   if (route.path.startsWith('/commerces')) return 'Gestion des commerces'
   if (route.path.startsWith('/factures')) return 'Factures et paiements'
@@ -65,6 +67,12 @@ async function onLogout() {
         </RouterLink>
         <div class="gc-side-divider"></div>
         <div class="gc-side-section">Administration</div>
+        <RouterLink v-if="isAdmin" to="/catalogue/activites" class="gc-side-link">
+          <GcIcon name="shop"/> <span>Activités commerciales</span>
+        </RouterLink>
+        <RouterLink v-if="isAdmin" to="/catalogue/tarifs" class="gc-side-link">
+          <GcIcon name="coins"/> <span>Grille tarifaire</span>
+        </RouterLink>
         <RouterLink v-if="isAdmin" to="/utilisateurs" class="gc-side-link">
           <GcIcon name="users"/> <span>Utilisateurs</span>
         </RouterLink>

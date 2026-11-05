@@ -5,6 +5,8 @@ import { auth } from './auth'
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
+    { path: '/catalogue/activites', name: 'gc-catalog-activities', component: () => import('./views/ActivityCatalogAdminView.vue'), meta: { admin: true } },
+    { path: '/catalogue/tarifs', name: 'gc-catalog-tariffs', component: () => import('./views/TariffCatalogAdminView.vue'), meta: { admin: true } },
     { path: '/mon-profil', name: 'my-profile', component: () => import('./views/MyProfileView.vue') },
     { path: '/roles-attributions', name: 'roles-assignments-v31', component: () => import('./views/UserRoleAssignmentsV31View.vue'), meta: { admin: true } },
     { path: '/acces-refuse', name: 'access-denied-v31', component: () => import('./views/AccessDeniedView.vue') },
