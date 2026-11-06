@@ -16,7 +16,7 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 final class InvoiceGenerator
 {
-    public function __construct(private readonly EntityManagerInterface $em)
+    public function __construct(private readonly EntityManagerInterface $em, private readonly BillingProfileResolver $profiles)
     {
     }
 
@@ -25,6 +25,11 @@ final class InvoiceGenerator
         $period = $period->modify('first day of this month')->setTime(0, 0);
 
         if ($business->getStatus() !== BusinessStatus::Active) {
+            return null;
+        }
+
+        // N'émettre de factures mensuelles que pour les commerces au profil mensuel à la période considérée.
+        if ($this->profiles->frequencyAt($business, $period) !== 'monthly') {
             return null;
         }
 

@@ -12,6 +12,7 @@ const menuOpen = ref(false)
 const headerSearch = ref('')
 const isAdmin = computed(() => isAdministrator())
 const pageTitle = computed(() => {
+  if (route.path.startsWith('/mon-espace/factures')) return 'Mes factures'
   if (route.path.startsWith('/catalogue/activites')) return 'Activités commerciales'
   if (route.path.startsWith('/catalogue/tarifs')) return 'Grille tarifaire'
   if (route.path.startsWith('/tableau-de-bord')) return 'Tableau de bord'
@@ -66,6 +67,9 @@ async function onLogout() {
           <GcIcon name="alert"/> <span>Annulations</span>
         </RouterLink>
         <div class="gc-side-divider"></div>
+                <RouterLink to="/mon-espace/factures" class="gc-side-link">
+          <GcIcon name="file"/> <span>Mes factures</span>
+        </RouterLink>
         <div class="gc-side-section">Administration</div>
         <RouterLink v-if="isAdmin" to="/catalogue/activites" class="gc-side-link">
           <GcIcon name="shop"/> <span>Activités commerciales</span>

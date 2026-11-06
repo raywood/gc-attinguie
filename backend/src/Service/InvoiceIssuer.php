@@ -23,7 +23,7 @@ final class InvoiceIssuer
     }
 
     /** @throws InvoiceNotIssuableException */
-    public function issue(Invoice $invoice, ?\DateTimeImmutable $now = null): void
+    public function issue(Invoice $invoice, ?\DateTimeImmutable $now = null, ?\DateTimeImmutable $dueAtOverride = null): void
     {
         $now ??= new \DateTimeImmutable();
 
@@ -44,7 +44,7 @@ final class InvoiceIssuer
 
         $invoice->setStatus(InvoiceStatus::Issued);
         $invoice->setIssuedAt($now);
-        $invoice->setDueAt($now->setTime(0, 0)->modify(sprintf('+%d days', $this->dueDays)));
+        $invoice->setDueAt($dueAtOverride ?? $now->setTime(0, 0)->modify(sprintf('+%d days', $this->dueDays)));
 
         $this->em->flush();
     }

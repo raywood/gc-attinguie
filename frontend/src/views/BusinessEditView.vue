@@ -1,4 +1,5 @@
 <script setup>
+import BusinessBillingPanel from '../components/BusinessBillingPanel.vue'
 import { reactive, ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { api, ApiError } from '../api'
@@ -116,4 +117,5 @@ async function save() {
     </div>
   </form>
   <BusinessQrCode v-if="!loading && types.length" :business-id="id" />
+  <BusinessBillingPanel v-if="!loading && types.length" :business-id="id" />
 </template>

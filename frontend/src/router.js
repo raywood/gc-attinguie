@@ -5,6 +5,7 @@ import { auth } from './auth'
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
+    { path: '/mon-espace/factures', name: 'merchant-invoices', component: () => import('./views/MerchantInvoicesView.vue') },
     { path: '/catalogue/activites', name: 'gc-catalog-activities', component: () => import('./views/ActivityCatalogAdminView.vue'), meta: { admin: true } },
     { path: '/catalogue/tarifs', name: 'gc-catalog-tariffs', component: () => import('./views/TariffCatalogAdminView.vue'), meta: { admin: true } },
     { path: '/mon-profil', name: 'my-profile', component: () => import('./views/MyProfileView.vue') },
