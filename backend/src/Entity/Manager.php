@@ -24,9 +24,16 @@ class Manager
     #[ORM\Column(length: 180, nullable: true)]
     private ?string $email = null;
 
+    // gc-manager-link-v1 : un compte utilisateur peut gérer plusieurs commerces.
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'user_id', nullable: true, onDelete: 'SET NULL')]
+    private ?User $user = null;
+
     #[ORM\Column(length: 50, nullable: true)]
     private ?string $idDocumentNumber = null;
 
+    public function getUser(): ?User { return $this->user; }
+    public function setUser(?User $user): static { $this->user = $user; return $this; }
     public function getId(): ?int { return $this->id; }
     public function getLastName(): string { return $this->lastName; }
     public function setLastName(string $v): static { $this->lastName = $v; return $this; }

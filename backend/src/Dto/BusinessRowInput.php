@@ -30,6 +30,11 @@ final class BusinessRowInput
         #[Assert\Length(max: 100, maxMessage: '100 caractères maximum.')]
         public readonly ?string $managerFirstName = null,
 
+        // gc-manager-link-v1
+        #[Assert\Email(message: 'Adresse e-mail du gérant invalide.')]
+        #[Assert\Length(max: 180, maxMessage: '180 caractères maximum.')]
+        public readonly ?string $managerEmail = null,
+
         #[Assert\Length(max: 30, maxMessage: '30 caractères maximum.')]
         public readonly ?string $managerPhone = null,
     ) {
@@ -57,6 +62,7 @@ final class BusinessRowInput
             managerLastName: $str($d['managerLastName'] ?? null),
             managerFirstName: $str($d['managerFirstName'] ?? null),
             managerPhone: $str($d['managerPhone'] ?? null),
+            managerEmail: $str($d['managerEmail'] ?? null),
         );
     }
 

@@ -7,6 +7,8 @@ use App\Dto\BusinessRowInput;
 use App\Entity\Business;
 use App\Entity\BusinessManager;
 use App\Entity\Manager;
+use App\Entity\User;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use App\Enum\BusinessStatus;
 use App\Service\BusinessRegistrar;
 use App\Service\BusinessUpdater;
@@ -31,6 +33,8 @@ final class BusinessController extends AbstractController
     #[Route('', name: 'api_businesses_list', methods: ['GET'])]
     public function list(Request $request): JsonResponse
     {
+        // gc-manager-link-v1 : interdire la liste municipale aux gérants.
+        if (!$this->isMunicipalReader()) return $this->json(['error' => 'Accès réservé aux agents habilités.'], 403);
         $page = max(1, $request->query->getInt('page', 1));
         $q = trim((string) $request->query->get('q', ''));
 
@@ -77,6 +81,7 @@ final class BusinessController extends AbstractController
 
     /** Enregistre plusieurs commerces d'un coup (tout ou rien). */
     #[Route('', name: 'api_businesses_create', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function create(Request $request, ValidatorInterface $validator, BusinessRegistrar $registrar): JsonResponse
     {
         if ($request->getContentTypeFormat() !== 'json') {
@@ -104,6 +109,14 @@ final class BusinessController extends AbstractController
         foreach ($rawRows as $i => $raw) {
             $input = BusinessRowInput::fromArray(is_array($raw) ? $raw : []);
             $inputs[] = $input;
+            // Un gérant réel et son e-mail sont obligatoires sur chaque commerce créé.
+            if (!$input->hasManager() || $input->managerFirstName === null || $input->managerEmail === null) {
+                $errors["rows.$i.managerEmail"] ??= 'Nom, prénom et e-mail du gérant obligatoires.';
+            } elseif (mb_strlen($input->managerFirstName) > 80 || mb_strlen((string)$input->managerLastName) > 80
+                || !filter_var($input->managerEmail, FILTER_VALIDATE_EMAIL)
+                || preg_match('/\.(invalid|test)$/i', $input->managerEmail)) {
+                $errors["rows.$i.managerEmail"] ??= 'Identité ou e-mail du gérant invalide (80 caractères maximum par nom).';
+            }
 
             foreach ($validator->validate($input) as $violation) {
                 $errors["rows.$i." . $violation->getPropertyPath()] ??= $violation->getMessage();
@@ -117,18 +130,28 @@ final class BusinessController extends AbstractController
             return new JsonResponse(['errors' => $errors], 422);
         }
 
-        $created = $registrar->register($inputs);
-
-        return new JsonResponse([
+        try {
+            $actor = $this->getUser();
+            $created = $registrar->register($inputs, $actor instanceof User ? $actor : null);
+        } catch (\DomainException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], 409);
+        } catch (UniqueConstraintViolationException) {
+            return new JsonResponse(['error' => 'Adresse e-mail déjà utilisée ou rattachement existant. Rechargez la page.'], 409);
+        }
+        $response = new JsonResponse([
             'created' => count($created),
             'ids' => array_map(static fn (Business $b) => $b->getId(), $created),
+            'invitations' => $registrar->invitations(),
         ], 201);
+        $response->headers->set('Cache-Control', 'private, no-store');
+        return $response;
     }
 
     /** Consulte un commerce pour pre-remplir le formulaire de modification. */
     #[Route('/{id<\d+>}', name: 'api_businesses_show', methods: ['GET'])]
     public function show(int $id): JsonResponse
     {
+        if (!$this->isMunicipalReader()) return $this->json(['error' => 'Accès réservé aux agents habilités.'], 403);
         $business = $this->em->find(Business::class, $id);
         if ($business === null) {
             return new JsonResponse(['error' => 'Commerce introuvable.'], 404);
@@ -181,7 +204,11 @@ final class BusinessController extends AbstractController
             return new JsonResponse(['errors' => $errors], 422);
         }
 
-        $updater->update($business, $input, $status);
+        try {
+            $updater->update($business, $input, $status);
+        } catch (\DomainException $e) {
+            return $this->json(['error' => $e->getMessage()], 409);
+        }
         $manager = $this->primaryManagers([$id])[$id] ?? null;
 
         return $this->json($this->editPayload($business, $manager));
@@ -200,7 +227,18 @@ final class BusinessController extends AbstractController
             'managerLastName' => $manager?->getLastName(),
             'managerFirstName' => $manager?->getFirstName(),
             'managerPhone' => $manager?->getPhone(),
+            'managerEmail' => $manager?->getUser()?->getEmail() ?? $manager?->getEmail(),
+            'managerAccountLinked' => $manager?->getUser() !== null,
         ];
+    }
+
+    private function isMunicipalReader(): bool
+    {
+        // Les gérants ne doivent pas accéder à la liste de l'ensemble des commerces.
+        foreach (['ROLE_ADMIN', 'ROLE_AGENT', 'ROLE_REGISSEUR', 'ROLE_COMPTABLE'] as $role) {
+            if ($this->isGranted($role)) return true;
+        }
+        return false;
     }
 
     /**

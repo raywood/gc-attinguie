@@ -45,6 +45,14 @@ final class BusinessUpdater
                 || $current->getFirstName() !== $input->managerFirstName
                 || $current->getPhone() !== $input->managerPhone);
 
+            // gc-manager-link-v1 : ne pas créer une nouvelle identité avec un accès orphelin.
+            if ($current?->getUser() !== null) {
+                $emailChanged = $input->managerEmail !== null
+                    && mb_strtolower($input->managerEmail) !== mb_strtolower($current->getUser()->getEmail());
+                if ($managerChanged || $emailChanged) {
+                    throw new \DomainException('Gérant lié à un compte : changement de gérant à réaliser depuis la procédure dédiée.');
+                }
+            }
             if ($link !== null && $managerChanged) {
                 // Indispensable avant la creation du nouveau lien : index unique partiel.
                 $link->setEndedAt(new \DateTimeImmutable('today'));

@@ -7,15 +7,21 @@ use App\Dto\BusinessRowInput;
 use App\Entity\ActivityType;
 use App\Entity\Business;
 use App\Entity\BusinessManager;
-use App\Entity\Manager;
+use App\Entity\User;
+use App\Entity\BusinessBillingProfile;
 use Doctrine\ORM\EntityManagerInterface;
 
 /** Enregistre une liste de commerces (et leur gérant) en une seule transaction. */
 final class BusinessRegistrar
 {
-    public function __construct(private readonly EntityManagerInterface $em)
-    {
-    }
+    // gc-manager-link-v1
+    private array $invitations = [];
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly ManagerAccountProvisioner $accounts,
+    ) {}
+    /** Les jetons d'activation ne sont renvoyés qu'une fois à l'administrateur. */
+    public function invitations(): array { return $this->invitations; }
 
     /** @return array<int, ActivityType> indexés par id */
     public function activityTypesById(): array
@@ -34,9 +40,11 @@ final class BusinessRegistrar
      * @param list<BusinessRowInput> $rows validées au préalable
      * @return list<Business>
      */
-    public function register(array $rows): array
+    public function register(array $rows, ?User $actor = null): array
     {
-        return $this->em->wrapInTransaction(function () use ($rows): array {
+        $this->invitations = [];
+        $invites = [];
+        $created = $this->em->wrapInTransaction(function () use ($rows, $actor, &$invites): array {
             $types = $this->activityTypesById();
             $created = [];
 
@@ -48,14 +56,15 @@ final class BusinessRegistrar
                     ->setDistrict($row->district);
                 $this->em->persist($business);
 
-                if ($row->hasManager()) {
-                    $manager = (new Manager())
-                        ->setLastName((string) $row->managerLastName)
-                        ->setFirstName((string) $row->managerFirstName)
-                        ->setPhone($row->managerPhone);
-                    $this->em->persist($manager);
-                    $this->em->persist(new BusinessManager($business, $manager));
-                }
+                // Initialiser le profil de facturation des nouveaux commerces.
+                $this->em->persist(new BusinessBillingProfile(
+                    $business, 'monthly',
+                    new \DateTimeImmutable('first day of this month', new \DateTimeZone('Africa/Abidjan')),
+                    'Profil mensuel initial', $actor,
+                ));
+                // Transaction unique : commerce, compte, gérant, association et accès.
+                $invite = $this->accounts->attach($business, $row, $actor);
+                if ($invite !== null) $invites[] = $invite;
 
                 $created[] = $business;
             }
@@ -64,5 +73,7 @@ final class BusinessRegistrar
 
             return $created;
         });
+        $this->invitations = $invites;
+        return $created;
     }
 }

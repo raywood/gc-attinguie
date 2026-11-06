@@ -18,8 +18,11 @@ async function submit() {
   loading.value = true
   try {
     await auth.login(email.value.trim(), password.value)
+    // gc-manager-link-v1 : destination propre au gérant.
+    const merchantOnly = auth.user?.roles?.includes('ROLE_GERANT') &&
+      !['ROLE_ADMIN', 'ROLE_AGENT', 'ROLE_REGISSEUR', 'ROLE_COMPTABLE'].some(r => auth.user?.roles?.includes(r))
     const target = String(route.query.redirect || '')
-    await router.push(target.startsWith('/') && !target.startsWith('//') ? target : { name: 'businesses' })
+    await router.push(target.startsWith('/') && !target.startsWith('//') ? target : { name: merchantOnly ? 'merchant-businesses' : 'businesses' })
   } catch (e) {
     error.value = e instanceof ApiError && e.status === 401
       ? 'Adresse e-mail ou mot de passe incorrect.'

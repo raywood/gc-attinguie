@@ -5,6 +5,8 @@ import { auth } from './auth'
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
+    // gc-manager-link-v1 : espace réservé aux gérants.
+    { path: '/mon-espace/commerces', name: 'merchant-businesses', component: () => import('./views/MerchantBusinessesView.vue'), meta: { merchant: true } },
     { path: '/mon-espace/factures', name: 'merchant-invoices', component: () => import('./views/MerchantInvoicesView.vue') },
     { path: '/catalogue/activites', name: 'gc-catalog-activities', component: () => import('./views/ActivityCatalogAdminView.vue'), meta: { admin: true } },
     { path: '/catalogue/tarifs', name: 'gc-catalog-tariffs', component: () => import('./views/TariffCatalogAdminView.vue'), meta: { admin: true } },
@@ -35,13 +37,16 @@ router.beforeEach(async (to) => {
   if (!auth.loaded) await auth.fetchMe()
   if (!to.meta.public && !auth.user) return { name: 'login', query: { redirect: to.fullPath } }
   if (to.meta.admin && !auth.user?.roles?.includes('ROLE_ADMIN')) return { name: 'businesses' }
-  if (to.name === 'login' && auth.user) return { name: 'businesses' }
+  if (to.name === 'login' && auth.user) return { name: auth.user?.roles?.includes('ROLE_GERANT') ? 'merchant-businesses' : 'businesses' }
+  if (to.name === 'businesses' && auth.user?.roles?.includes('ROLE_GERANT') &&
+      !['ROLE_ADMIN', 'ROLE_AGENT', 'ROLE_REGISSEUR', 'ROLE_COMPTABLE'].some(r => auth.user?.roles?.includes(r)))
+    return { name: 'merchant-businesses' }
 })
 
 
 // gc-rbac-v31-guard : contrôle d'interface seulement ; le serveur est la source de vérité.
 router.beforeEach(async (to) => {
-  if (to.meta.public || to.path === '/acces-refuse') return
+  if (to.meta.public || to.path.startsWith('/mon-espace/') || to.path === '/acces-refuse') return
   if (!auth.user) return
   const ready = await refreshAbilities() // relit les droits à chaque changement de page
   if (!ready) return '/acces-refuse'

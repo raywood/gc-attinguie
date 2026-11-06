@@ -21,6 +21,7 @@ const pageTitle = computed(() => {
   if (route.path.startsWith('/recouvrement')) return 'Recouvrement'
   if (route.path.startsWith('/utilisateurs')) return 'Utilisateurs'
   if (route.path.startsWith('/roles')) return 'Rôles et permissions'
+  if (route.path.startsWith('/mon-espace/commerces')) return 'Mes commerces'
   if (route.path.startsWith('/mon-profil')) return 'Mon profil'
   if (route.path.startsWith('/annulations')) return 'Annulations'
   return 'GC-ATTINGUIÉ'
@@ -85,6 +86,10 @@ async function onLogout() {
         </RouterLink>
         <RouterLink v-if="isAdmin" to="/roles-attributions" class="gc-side-link">
           <GcIcon name="settings"/> <span>Attribution des rôles</span>
+        </RouterLink>
+        <!-- gc-manager-link-v1 -->
+        <RouterLink v-if="auth.user?.roles?.includes('ROLE_GERANT')" to="/mon-espace/commerces" class="gc-side-link">
+          <GcIcon name="shop"/> <span>Mes commerces</span>
         </RouterLink>
         <RouterLink to="/mon-profil" class="gc-side-link">
           <GcIcon name="users"/> <span>Mon profil</span>

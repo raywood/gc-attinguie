@@ -1,4 +1,6 @@
 <script setup>
+// gc-manager-transfer-lot2
+import BusinessManagerTransfer from '../components/BusinessManagerTransfer.vue'
 import BusinessBillingPanel from '../components/BusinessBillingPanel.vue'
 import { reactive, ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
@@ -10,12 +12,13 @@ const id = String(route.params.id)
 const types = ref([])
 const loading = ref(true)
 const saving = ref(false)
+const managerAccountLinked = ref(false) // gc-manager-link-v1
 const saved = ref(false)
 const error = ref('')
 const fieldErrors = ref({})
 const form = reactive({
   name: '', activityTypeId: '', district: '', address: '',
-  managerLastName: '', managerFirstName: '', managerPhone: '', status: 'active',
+  managerLastName: '', managerFirstName: '', managerPhone: '', managerEmail: '', status: 'active',
 })
 const statuses = [
   { value: 'active', label: 'Actif' },
@@ -30,6 +33,7 @@ onMounted(async () => {
       api.get('/api/activity-types'),
     ])
     types.value = activityTypes
+    managerAccountLinked.value = !!business.managerAccountLinked
     for (const key of Object.keys(form)) form[key] = business[key] ?? ''
     form.activityTypeId = String(business.activityTypeId)
   } catch (e) {
@@ -92,16 +96,19 @@ async function save() {
         <small v-if="fieldErrors.address" class="error">{{ fieldErrors.address }}</small>
       </label>
       <label>Nom du gérant
-        <input v-model.trim="form.managerLastName" maxlength="100" />
+        <input v-model.trim="form.managerLastName" maxlength="100" :readonly="managerAccountLinked" />
         <small v-if="fieldErrors.managerLastName" class="error">{{ fieldErrors.managerLastName }}</small>
       </label>
       <label>Prénom du gérant
-        <input v-model.trim="form.managerFirstName" maxlength="100" />
+        <input v-model.trim="form.managerFirstName" maxlength="100" :readonly="managerAccountLinked" />
         <small v-if="fieldErrors.managerFirstName" class="error">{{ fieldErrors.managerFirstName }}</small>
       </label>
       <label>Téléphone du gérant
-        <input v-model.trim="form.managerPhone" type="tel" maxlength="30" />
+        <input v-model.trim="form.managerPhone" type="tel" maxlength="30" :readonly="managerAccountLinked" />
         <small v-if="fieldErrors.managerPhone" class="error">{{ fieldErrors.managerPhone }}</small>
+      </label>
+      <label>Adresse e-mail du gérant
+        <input v-model.trim="form.managerEmail" type="email" maxlength="180" readonly />
       </label>
       <label>Statut
         <select v-model="form.status">
@@ -110,7 +117,7 @@ async function save() {
         <small v-if="fieldErrors.status" class="error">{{ fieldErrors.status }}</small>
       </label>
     </div>
-    <p class="muted small">Un changement de gérant conserve l'ancien responsable dans l'historique.</p>
+    <p class="muted small">Un changement de gérant conserve l'ancien responsable dans l'historique. Pour un gérant disposant d'un compte, les champs d'identité sont verrouillés : une procédure de transfert des accès sera ajoutée séparément.</p>
     <div class="actions">
       <RouterLink to="/commerces" class="btn ghost">Annuler</RouterLink>
       <button type="submit" class="btn" :disabled="saving">{{ saving ? 'Enregistrement…' : 'Enregistrer les modifications' }}</button>
@@ -118,4 +125,5 @@ async function save() {
   </form>
   <BusinessQrCode v-if="!loading && types.length" :business-id="id" />
   <BusinessBillingPanel v-if="!loading && types.length" :business-id="id" />
+  <BusinessManagerTransfer v-if="!loading && types.length" :business-id="id" />
 </template>

@@ -11,11 +11,12 @@ const columns = [
   { key: 'managerLastName', label: 'Gérant — nom' },
   { key: 'managerFirstName', label: 'Gérant — prénom' },
   { key: 'managerPhone', label: 'Téléphone', inputmode: 'tel' },
+  { key: 'managerEmail', label: 'Gérant — e-mail *', type: 'email', placeholder: 'gerant@exemple.ci' },
 ]
 
 const blankRow = () => ({
   name: '', activityTypeId: '', district: '', address: '',
-  managerLastName: '', managerFirstName: '', managerPhone: '',
+  managerLastName: '', managerFirstName: '', managerPhone: '', managerEmail: '',
 })
 const blankRows = (n = 5) => Array.from({ length: n }, blankRow)
 
@@ -23,7 +24,14 @@ const types = ref([])
 const rows = ref(blankRows())
 const errors = ref({}) // clé "indexLigne.champ" → message
 const globalError = ref('')
+// gc-manager-link-v1 : liens d'activation affichés une seule fois après création.
+const invitations = ref([])
 const createdCount = ref(0)
+const invitationLink = (i) => `${window.location.origin}/activation#token=${i.token}`
+async function copyInvitation(i) {
+  try { await navigator.clipboard.writeText(invitationLink(i)) }
+  catch { globalError.value = 'Copie impossible. Sélectionnez le lien dans la zone ci-dessous.' }
+}
 const loading = ref(false)
 
 const fmt = new Intl.NumberFormat('fr-FR')
@@ -54,6 +62,7 @@ function removeRow(i) {
 async function submit() {
   globalError.value = ''
   createdCount.value = 0
+  invitations.value = []
   errors.value = {}
 
   // On n'envoie que les lignes remplies, en gardant leur position d'origine pour afficher les erreurs.
@@ -72,6 +81,7 @@ async function submit() {
       })),
     })
     createdCount.value = res.created
+    invitations.value = Array.isArray(res.invitations) ? res.invitations : []
     rows.value = blankRows()
   } catch (e) {
     if (e instanceof ApiError && e.status === 422 && e.data?.errors) {
@@ -108,6 +118,15 @@ async function submit() {
     <RouterLink to="/commerces">Voir la liste</RouterLink>
   </p>
   <p v-if="globalError" class="error" role="alert">{{ globalError }}</p>
+  <section v-if="invitations.length" class="card" aria-label="Invitations des nouveaux gérants">
+    <h2>Invitations à transmettre aux nouveaux gérants</h2>
+    <p class="muted small">Liens d'activation valables 7 jours. Ils ne sont affichés qu'après l'enregistrement ; transmettez chacun uniquement à son destinataire. Aucun e-mail n'a été envoyé automatiquement.</p>
+    <div v-for="i in invitations" :key="i.email" style="margin-bottom:1rem;display:grid;gap:.4rem">
+      <strong>{{ i.email }}</strong>
+      <input :value="invitationLink(i)" readonly aria-label="Lien d'activation du gérant" />
+      <button type="button" class="btn" @click="copyInvitation(i)">Copier le lien d'activation</button>
+    </div>
+  </section>
 
   <form @submit.prevent="submit">
     <div class="table-wrap">
@@ -133,7 +152,7 @@ async function submit() {
                 :class="{ invalid: err(i, c.key) }"
                 :placeholder="c.placeholder"
                 :inputmode="c.inputmode"
-                type="text"
+                :type="c.type || 'text'"
               />
               <small v-if="err(i, c.key)" class="error">{{ err(i, c.key) }}</small>
             </td>
