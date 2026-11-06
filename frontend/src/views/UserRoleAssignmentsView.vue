@@ -83,10 +83,41 @@ onMounted(load)
     </div>
     <p v-if="error" class="error" role="alert">{{ error }}</p>
     <p v-if="info" class="success" role="status">{{ info }}</p>
-    <form class="card filter" @submit.prevent="page=1;load()">
-      <label>Rechercher un agent<input v-model="search" maxlength="100" placeholder="Email, prénom, nom" /></label>
-      <button class="btn" type="submit">Rechercher</button>
+
+    <form
+      class="card agent-search-form"
+      @submit.prevent="page = 1; load()"
+    >
+      <h3 class="agent-search-title">
+        Rechercher un agent
+      </h3>
+
+      <div class="agent-search-grid">
+        <div class="agent-search-field">
+          <label for="agent-search">
+            Nom, prénom ou adresse e-mail
+          </label>
+
+          <input
+            id="agent-search"
+            v-model="search"
+            type="search"
+            maxlength="100"
+            placeholder="Email, prénom, nom"
+          />
+        </div>
+      </div>
+
+      <div class="agent-search-actions">
+        <button
+          class="btn agent-search-btn"
+          type="submit"
+        >
+          Rechercher
+        </button>
+      </div>
     </form>
+
     <div class="layout">
       <section class="card"><h2>Comptes ({{ total }})</h2>
         <div class="items">
@@ -116,4 +147,146 @@ onMounted(load)
 </template>
 <style scoped>
 .roles-admin{display:grid;gap:1rem}.head{display:flex;justify-content:space-between;flex-wrap:wrap;align-items:center}.filter{display:flex;gap:1rem;align-items:end;flex-wrap:wrap}.filter label{flex:1;min-width:220px}.layout{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:1rem}.items,.role-list{display:grid;gap:.6rem;max-height:480px;overflow:auto}.role-list{margin:1rem 0}.check{display:flex;gap:.4rem;align-items:center}.check small{color:var(--muted, #666)}.row{display:grid;text-align:left;gap:.25rem;background:transparent;color:inherit;border:1px solid #8885;padding:.65rem;border-radius:.5rem;cursor:pointer}.row small{overflow-wrap:anywhere}.pages{display:flex;justify-content:space-between;gap:.5rem;align-items:center;margin-top:.8rem}.error{color:#a52a2a}.success{color:#157447}
+
+/* ==========================================
+   GC-ATTINGUIÉ
+   Attribution des rôles V3.1
+   Formulaire de recherche des agents
+   ========================================== */
+
+.agent-search-form.card {
+  display: block !important;
+  width: 100%;
+  max-width: none;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0;
+  padding: 20px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid #d8e5dc;
+  border-radius: 14px;
+  box-shadow: 0 5px 14px rgba(0, 65, 35, 0.05);
+}
+
+/* Titre vert */
+
+.agent-search-title {
+  margin: 0 0 16px;
+  color: #075d39;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+/* Grille identique aux autres formulaires */
+
+.agent-search-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+  align-items: start;
+  justify-items: stretch;
+}
+
+/* Champ et libellé */
+
+.agent-search-form .agent-search-field {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  width: 100%;
+  min-width: 0;
+  margin: 0 !important;
+  padding: 0;
+  gap: 6px;
+}
+
+.agent-search-form .agent-search-field label {
+  display: block !important;
+  position: static !important;
+  width: 100%;
+  margin: 0 !important;
+  padding: 0;
+  color: #194e37;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+}
+
+/* Champ de recherche */
+
+.agent-search-form .agent-search-field input {
+  display: block !important;
+  position: static !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  margin: 0 !important;
+  padding: 9px 12px;
+  box-sizing: border-box;
+  color: #14283c;
+  background: #ffffff;
+  border: 1px solid #d6e3da;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.agent-search-form input:focus {
+  outline: none;
+  border-color: #008751;
+  box-shadow: 0 0 0 3px rgba(0, 135, 81, 0.12);
+}
+
+/* Actions alignées à gauche */
+
+.agent-search-actions {
+  display: flex !important;
+  justify-content: flex-start !important;
+  align-items: center;
+  width: 100%;
+  margin-top: 16px;
+}
+
+/* Bouton orange */
+
+.agent-search-form .agent-search-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto !important;
+  min-height: 42px;
+  padding: 10px 20px;
+  margin: 0 !important;
+  background: #ed7100;
+  border: 1px solid #ed7100;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(237, 113, 0, 0.17);
+}
+
+.agent-search-form .agent-search-btn:hover {
+  background: #d56400;
+  border-color: #d56400;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .agent-search-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .agent-search-form.card {
+    padding: 14px;
+  }
+}
+
 </style>
