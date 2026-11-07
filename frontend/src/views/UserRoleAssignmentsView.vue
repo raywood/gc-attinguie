@@ -127,15 +127,68 @@ onMounted(load)
         </div>
         <div class="pages"><button type="button" class="btn ghost" :disabled="page<=1" @click="page--;load()">Précédent</button><span>{{ page }} / {{ pages }}</span><button type="button" class="btn ghost" :disabled="page>=pages" @click="page++;load()">Suivant</button></div>
       </section>
-      <section class="card"><h2>Rôles du compte</h2>
-        <template v-if="selected"><p><strong>{{ selected.email }}</strong></p>
-          <p v-if="isSelf(selected)" class="muted">La modification de tes propres rôles est bloquée pour protéger l’administration.</p>
-          <div class="role-list">
-            <label v-for="r in roles" :key="r.code" class="check"><input v-model="choice" type="checkbox" :value="r.code" :disabled="busy || isSelf(selected)" /> {{ r.label }} <small>({{ r.code }})</small></label>
-          </div>
-          <button class="btn" type="button" :disabled="busy || isSelf(selected) || !choice.length" @click="save">Enregistrer les attributions</button>
-        </template><p v-else class="muted">Sélectionne un compte dans la liste.</p>
-      </section>
+
+<section class="card role-card">
+  <h2 class="role-card-title">Rôles du compte</h2>
+
+  <template v-if="selected">
+    <p class="role-account-email">
+      <strong>{{ selected.email }}</strong>
+    </p>
+
+    <p v-if="isSelf(selected)" class="muted">
+      La modification de tes propres rôles est bloquée
+      pour protéger l’administration.
+    </p>
+
+    <div class="roles-grid">
+      <!-- En-têtes des trois colonnes -->
+      <div class="roles-grid-header">
+        <span>Choix</span>
+        <span>Fonction</span>
+        <span>Code du rôle</span>
+      </div>
+
+      <!-- Liste des rôles -->
+      <label
+        v-for="r in roles"
+        :key="r.code"
+        class="role-grid-row"
+      >
+        <input
+          v-model="choice"
+          type="checkbox"
+          :value="r.code"
+          :disabled="busy || isSelf(selected)"
+        />
+
+        <span class="role-grid-name">
+          {{ r.label }}
+        </span>
+
+        <small class="role-grid-code">
+          {{ r.code }}
+        </small>
+      </label>
+    </div>
+
+    <div class="role-card-actions">
+      <button
+        class="btn role-save-btn"
+        type="button"
+        :disabled="busy || isSelf(selected) || !choice.length"
+        @click="save"
+      >
+        {{ busy ? 'Enregistrement…' : 'Enregistrer les attributions' }}
+      </button>
+    </div>
+  </template>
+
+  <p v-else class="muted">
+    Sélectionne un compte dans la liste.
+  </p>
+</section>
+
     </div>
     <section class="card"><h2>Attribution en masse par CSV</h2>
       <p>CSV UTF-8 : <code>email;roles</code> avec plusieurs rôles séparés par <code>|</code>. Maximum 100 lignes. Par sécurité, l’import refuse les comptes administrateurs et l’attribution de <code>ROLE_ADMIN</code>.</p>
@@ -286,6 +339,192 @@ onMounted(load)
 
   .agent-search-form.card {
     padding: 14px;
+  }
+}
+
+
+/* ============================================
+   GC-ATTINGUIÉ - Attribution des rôles V3.1
+   Affichage en trois colonnes
+   ============================================ */
+
+.role-card.card {
+  display: block !important;
+  width: 100%;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 22px;
+  background: #ffffff;
+  border: 1px solid #d8e5dc;
+  border-radius: 14px;
+  box-sizing: border-box;
+  box-shadow: 0 5px 14px rgba(0, 65, 35, 0.05);
+}
+
+/* En-tête */
+
+.role-card-title {
+  margin: 0 0 10px;
+  color: #075d39;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.role-account-email {
+  margin: 0 0 20px;
+  color: #14283c;
+  font-size: 15px;
+}
+
+/* Grille des rôles */
+
+.roles-grid {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 0;
+  margin-bottom: 20px;
+}
+
+/* Colonnes communes à l'en-tête et aux lignes */
+
+.roles-grid-header,
+.role-card .role-grid-row {
+  display: grid !important;
+  grid-template-columns:
+    70px
+    minmax(150px, 1fr)
+    minmax(230px, 1.15fr);
+
+  align-items: center !important;
+  column-gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left !important;
+}
+
+/* En-tête du tableau */
+
+.roles-grid-header {
+  padding: 12px 14px;
+  color: #075d39;
+  background: #f0f7f2;
+  border-bottom: 2px solid #008751;
+  border-radius: 8px 8px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Chaque ligne */
+
+.role-card .role-grid-row {
+  position: static !important;
+  margin: 0 !important;
+  padding: 13px 14px !important;
+  border-bottom: 1px solid #e5ece7;
+  color: #14283c;
+  background: #ffffff;
+  cursor: pointer;
+  gap: 16px;
+}
+
+.role-card .role-grid-row:hover {
+  background: #f8fbf9;
+}
+
+/* Cases à cocher */
+
+.role-card .role-grid-row input[type="checkbox"] {
+  display: block !important;
+  position: static !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px;
+  margin: 0 !important;
+  padding: 0 !important;
+  justify-self: center;
+  accent-color: #008751;
+  cursor: pointer;
+}
+
+/* Libellé des rôles */
+
+.role-grid-name {
+  display: block;
+  color: #14283c;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: left;
+  line-height: 1.5;
+}
+
+/* Codes des rôles */
+
+.role-grid-code {
+  display: block;
+  color: #637c73;
+  font-size: 12px;
+  font-weight: 400;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+/* Bouton d'enregistrement */
+
+.role-card-actions {
+  display: flex !important;
+  justify-content: flex-start !important;
+  width: 100%;
+}
+
+.role-card .role-save-btn {
+  display: inline-flex;
+  width: auto !important;
+  min-height: 44px;
+  padding: 12px 20px;
+  background: #ed7100;
+  border: 1px solid #ed7100;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(237, 113, 0, 0.17);
+}
+
+.role-card .role-save-btn:hover:not(:disabled) {
+  background: #d56400;
+}
+
+.role-card .role-save-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+
+@media (max-width: 640px) {
+  .role-card.card {
+    padding: 14px;
+  }
+
+  .roles-grid-header,
+  .role-card .role-grid-row {
+    grid-template-columns: 40px minmax(0, 1fr);
+    column-gap: 12px;
+  }
+
+  .roles-grid-header span:last-child {
+    display: none;
+  }
+
+  .role-grid-code {
+    grid-column: 2;
+    font-size: 11px;
+  }
+
+  .role-card .role-save-btn {
+    width: 100% !important;
+    justify-content: center;
   }
 }
 
