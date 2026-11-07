@@ -16,10 +16,16 @@ const form = ref({ email: '', first_name: '', last_name: '', phone: '', job_titl
 const csvFile = ref(null)
 const preview = ref(null)
 const invitations = ref([])
-const roleNames = {
-  ROLE_ADMIN: 'Administrateur', ROLE_AGENT: 'Agent municipal',
-  ROLE_REGISSEUR: 'Régisseur', ROLE_COMPTABLE: 'Comptable',
-}
+// Source unique : GET /api/admin/users -> security_roles(code, label).
+const roleOptions = ref([])
+const roleNames = computed(() => Object.fromEntries(
+  roleOptions.value.map(({ code, label }) => [code, label])
+))
+const defaultRole = () => (
+  roleOptions.value.find(r => r.code === 'ROLE_AGENT')?.code ??
+  roleOptions.value[0]?.code ??
+  ''
+)
 const pages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
 const inviteLink = (token) => `${window.location.origin}/activation#token=${encodeURIComponent(token)}`
 
@@ -33,6 +39,10 @@ async function load() {
     total.value = data.total
     pageSize.value = data.pageSize
     csrf.value = data.csrf
+    roleOptions.value = Array.isArray(data.roleOptions) ? data.roleOptions : []
+    if (!roleOptions.value.some(r => r.code === form.value.role)) {
+      form.value.role = defaultRole()
+    }
   } catch (e) {
     error.value = e.message || 'Chargement impossible.'
   } finally {
@@ -67,7 +77,7 @@ async function createOne() {
   try {
     const result = await send('/api/admin/users', form.value)
     keepInvites([result.created])
-    form.value = { email: '', first_name: '', last_name: '', phone: '', job_title: '', role: 'ROLE_AGENT' }
+    form.value = { email: '', first_name: '', last_name: '', phone: '', job_title: '', role: defaultRole() }
     page.value = 1
     await load()
   } catch (e) { error.value = e.message }
@@ -151,11 +161,12 @@ onMounted(load)
         <label>Fonction (facultative) <input v-model.trim="form.job_title" maxlength="120" autocomplete="off" /></label>
         <label>Profil / rôle
           <select v-model="form.role" required>
-            <option v-for="(label, role) in roleNames" :key="role" :value="role">{{ label }}</option>
+            <option v-if="!roleOptions.length" value="" disabled>Aucun rôle disponible</option>
+            <option v-for="role in roleOptions" :key="role.code" :value="role.code">{{ role.label }}</option>
           </select>
         </label>
         <p class="muted small">Le compte restera inactif jusqu’à la définition du mot de passe par son titulaire.</p>
-        <button class="btn" type="submit" :disabled="busy || !csrf">Créer et générer l’invitation</button>
+        <button class="btn" type="submit" :disabled="busy || !csrf || !roleOptions.length">Créer et générer l’invitation</button>
       </form>
       <section class="card">
         <h2>Importer plusieurs utilisateurs</h2>

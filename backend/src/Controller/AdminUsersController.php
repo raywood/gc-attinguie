@@ -21,7 +21,6 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 #[IsGranted('ROLE_ADMIN')]
 final class AdminUsersController extends AbstractController
 {
-    private const ROLES = ['ROLE_AGENT', 'ROLE_REGISSEUR', 'ROLE_COMPTABLE', 'ROLE_ADMIN'];
     private const CSRF_ID = 'gc_admin_users_v1';
 
     public function __construct(
@@ -69,9 +68,16 @@ final class AdminUsersController extends AbstractController
             'createdAt' => $r['created_at'],
         ], $rows);
 
+        // Le catalogue RBAC est l'unique source des rôles proposés et acceptés.
+        $roleOptions = $conn->fetchAllAssociative(
+            'SELECT code, label FROM security_roles WHERE code <> :technical ORDER BY label, code',
+            ['technical' => 'ROLE_USER'],
+        );
         return $this->json([
             'items' => $items, 'total' => $total, 'page' => $page, 'pageSize' => $pageSize,
-            'allowedRoles' => self::ROLES, 'csrf' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
+            'allowedRoles' => array_column($roleOptions, 'code'),
+            'roleOptions' => $roleOptions,
+            'csrf' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
         ]);
     }
 
@@ -217,7 +223,13 @@ final class AdminUsersController extends AbstractController
         if (mb_strlen($phone) > 32 || mb_strlen($job) > 120) {
             throw new \InvalidArgumentException('Téléphone ou fonction trop long.');
         }
-        if (!in_array($role, self::ROLES, true) || ($bulk && $role === 'ROLE_ADMIN')) {
+        // Refus des rôles absents du catalogue et du rôle technique ROLE_USER.
+        // Import CSV : promotion administrateur interdite, comme en V1.
+        $exists = $this->em->getConnection()->fetchOne(
+            'SELECT 1 FROM security_roles WHERE code = :code',
+            ['code' => $role],
+        );
+        if ($role === 'ROLE_USER' || $exists === false || ($bulk && $role === 'ROLE_ADMIN')) {
             throw new \InvalidArgumentException('Rôle non autorisé : ' . $role . '.');
         }
         return ['email' => $email, 'first_name' => $first, 'last_name' => $last, 'phone' => $phone, 'job_title' => $job, 'role' => $role];

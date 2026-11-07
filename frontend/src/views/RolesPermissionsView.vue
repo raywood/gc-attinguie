@@ -135,14 +135,14 @@ onMounted(load)
   <main class="rbac-v3">
     <header class="head">
       <div>
-        <h1>Rôles et permissions — V3</h1>
-        <RouterLink class="v3-btn secondary" to="/roles-attributions">Attribuer les rôles (V3.1)</RouterLink>
+        <h1>Rôles et permissions</h1>
+        <RouterLink class="v3-btn secondary" to="/roles-attributions">Attribuer les rôles</RouterLink>
         <p class="sub">Création individuelle, imports CSV, associations et consultation du catalogue municipal.</p>
       </div>
-      <RouterLink class="v3-btn secondary" to="/utilisateurs/administration">← Utilisateurs V2</RouterLink>
+      <RouterLink class="v3-btn secondary" to="/utilisateurs/administration">← Utilisateurs</RouterLink>
     </header>
 
-    <div class="notice"><strong>Catalogue V3 + raccordement V3.1.</strong> Les permissions raccordées par la V3.1 sont maintenant appliquées aux API municipales. Les autres permissions du catalogue restent déclaratives tant qu’aucun contrôleur ne les utilise.</div>
+    <div class="notice"><strong>Catalogue + raccordement.</strong> Les permissions raccordées par la sont maintenant appliquées aux API municipales. Les autres permissions du catalogue restent déclaratives tant qu’aucun contrôleur ne les utilise.</div>
     <p v-if="error" class="alert error" role="alert">{{ error }}</p>
     <p v-if="info" class="alert success" role="status">{{ info }}</p>
     <div class="metrics">
@@ -166,13 +166,43 @@ onMounted(load)
         <label>Code (ex. ROLE_CONTROLEUR)<input v-model.trim="roleForm.code" required maxlength="64" placeholder="ROLE_CONTROLEUR" /></label>
         <label>Libellé<input v-model.trim="roleForm.label" required maxlength="120" placeholder="Contrôleur municipal" /></label>
         <label>Description<textarea v-model.trim="roleForm.description" maxlength="500" rows="2" /></label>
-        <fieldset>
-          <legend>Permissions associées (facultatif)</legend>
-          <div class="checklist">
-            <label v-for="p in permissions" :key="p.id" class="check"><input v-model="roleForm.permissions" type="checkbox" :value="p.code" /><span>{{ p.label }} <small>({{ p.code }})</small></span></label>
-            <p v-if="!permissions.length" class="sub">Crée une permission avant de l'associer.</p>
+
+        <div class="permissions-card">
+          <h3 class="permissions-title">
+            Permissions associées (facultatif)
+          </h3>
+
+          <div class="permissions-table">
+            <!-- En-tête -->
+            <div class="permissions-header">
+              <span>Choix</span>
+              <span>Permission</span>
+              <span>Code</span>
+            </div>
+
+            <!-- Liste des permissions -->
+            <label
+              v-for="p in permissions"
+              :key="p.code"
+              class="permission-row"
+            >
+              <input
+                v-model="selectedPermissions"
+                type="checkbox"
+                :value="p.code"
+              />
+
+              <span class="permission-name">
+                {{ p.label }}
+              </span>
+
+              <small class="permission-code">
+                {{ p.code }}
+              </small>
+            </label>
           </div>
-        </fieldset>
+        </div>
+
         <button class="v3-btn" :disabled="busy || !csrf" type="submit">Créer le rôle</button>
       </form>
     </div>
@@ -279,4 +309,178 @@ fieldset { border: 1px solid #d1d5db; border-radius: 8px; margin: .8rem 0; } leg
 .perm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: .6rem; }.perm-item { border: 1px solid #e5e7eb; border-radius: 8px; padding: .7rem; display: grid; gap: .2rem; }
 .module { text-transform: uppercase; font-weight: 700; } .perm-item p { color: #6b7280; margin: 0; font-size: .85rem; }
 @media(max-width:760px) { .v3-grid, .metrics { grid-template-columns: 1fr; } }
+
+
+/* =========================================
+   GC-ATTINGUIÉ - Permissions des rôles
+   Présentation en 3 colonnes
+   ========================================= */
+
+.permissions-card {
+  display: block !important;
+  width: 100%;
+  padding: 18px;
+  background: #ffffff;
+  border: 1px solid #d8e5dc;
+  border-radius: 14px;
+  box-sizing: border-box;
+}
+
+/* Titre vert */
+
+.permissions-title {
+  margin: 0 0 18px;
+  color: #075d39;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* Conteneur */
+
+.permissions-table {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: 360px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid #e5ece7;
+  border-radius: 8px;
+}
+
+/* Structure des trois colonnes */
+
+.permissions-header,
+.permissions-card .permission-row {
+  display: grid !important;
+  grid-template-columns:
+    65px
+    minmax(0, 1fr)
+    minmax(150px, 1fr);
+  align-items: center !important;
+  column-gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* En-tête */
+
+.permissions-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 12px 14px;
+  background: #edf7f1;
+  border-bottom: 2px solid #008751;
+  color: #075d39;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Lignes des permissions */
+
+.permissions-card .permission-row {
+  position: static !important;
+  margin: 0 !important;
+  padding: 12px 14px !important;
+  border-bottom: 1px solid #e5ece7;
+  background: #ffffff;
+  cursor: pointer;
+  text-align: left !important;
+}
+
+.permissions-card .permission-row:hover {
+  background: #f8fbf9;
+}
+
+/* Checkboxes */
+
+.permissions-card .permission-row input[type="checkbox"] {
+  display: block !important;
+  position: static !important;
+  justify-self: center;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px;
+  margin: 0 !important;
+  padding: 0 !important;
+  accent-color: #008751;
+  cursor: pointer;
+}
+
+/* Libellés */
+
+.permission-name {
+  display: block;
+  min-width: 0;
+  color: #14283c;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+/* Codes techniques */
+
+.permission-code {
+  display: block;
+  min-width: 0;
+  color: #637c73;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+/* Bouton orange */
+
+.permission-create-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto !important;
+  min-height: 44px;
+  margin-top: 16px;
+  padding: 10px 20px;
+  background: #ed7100 !important;
+  border: 1px solid #ed7100 !important;
+  border-radius: 10px;
+  color: #ffffff !important;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(237, 113, 0, 0.17);
+}
+
+.permission-create-btn:hover:not(:disabled) {
+  background: #d56400 !important;
+}
+
+.permission-create-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+
+@media (max-width: 640px) {
+  .permissions-card {
+    padding: 12px;
+  }
+
+  .permissions-header,
+  .permissions-card .permission-row {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .permissions-header span:last-child {
+    display: none;
+  }
+
+  .permission-code {
+    grid-column: 2;
+    font-size: 11px;
+  }
+
+  .permission-create-btn {
+    width: 100% !important;
+  }
+}
 </style>
