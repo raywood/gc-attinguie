@@ -1,0 +1,7 @@
+# GC-ATTINGUIE : cookies de session HTTPS uniquement.
+# Active avec l'option --activate APRES validation HTTPS.
+framework:
+    session:
+        cookie_secure: true
+        cookie_httponly: true
+        cookie_samesite: lax
