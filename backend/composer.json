@@ -19,6 +19,7 @@
         "symfony/flex": "^2",
         "symfony/framework-bundle": "8.1.*",
         "symfony/messenger": "8.1.*",
+        "symfony/rate-limiter": "8.1.*",
         "symfony/redis-messenger": "8.1.*",
         "symfony/runtime": "8.1.*",
         "symfony/security-bundle": "8.1.*",
