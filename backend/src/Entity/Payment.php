@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'payments')]
+#[ORM\UniqueConstraint(name: 'uniq_payments_invoice_reference', columns: ['invoice_id', 'reference'])]
 class Payment
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
