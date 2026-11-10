@@ -1,7 +1,5 @@
 /* GC-ATTINGUIÉ : boutons d'action orange, avec exceptions sémantiques de sécurité.
    Chargé APRÈS Bootstrap, gc-brand et gc-toasts. Ne change jamais la couleur des toasts. */
-:root { --gc-action-orange: #E86D00; --gc-action-orange-hover: #C85600; }
-
 .gc-shell :is(button.btn, a.btn, input[type="submit"], button.gc-page-btn, button.gc-mobile-menu, button.gc-logout, button.gc-icon-button),
 .gc-public-main :is(button.btn, a.btn, input[type="submit"]) {
   background: var(--gc-action-orange);

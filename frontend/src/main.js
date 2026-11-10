@@ -8,6 +8,7 @@ import { auth } from './auth'
 // Bootstrap 5.3.6 local : pas de CDN, pas de dépendance npm supplémentaire.
 import './vendor/bootstrap.min.css'
 import './style.css'
+import './styles/gc-tokens.css'
 import './styles/gc-brand.css'
 import './styles/gc-toasts.css'
 import './styles/gc-buttons-orange.css'

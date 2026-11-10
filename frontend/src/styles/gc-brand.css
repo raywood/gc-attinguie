@@ -1,30 +1,6 @@
 /* GC-ATTINGUIÉ · Identité ivoirienne · Lot graphique 03
    Charte : vert #075E3D, orange #F97300, ivoire #F7F9F6, or #D5A441.
    Les sélecteurs gc-* isolent le nouveau design des autres modules. */
-:root {
-  --bg: #f6f9f7;
-  --card: #ffffff;
-  --text: #13253b;
-  --muted: #687b79;
-  --border: #dbe6e1;
-  --primary: #f97300;
-  --primary-text: #ffffff;
-  --danger: #db2834;
-  --ok: #07763c;
-  --gc-forest: #075e3d;
-  --gc-green: #067d46;
-  --gc-green-deep: #024d36;
-  --gc-orange: #f97300;
-  --gc-orange-light: #ffb221;
-  --gc-gold: #d5a441;
-  --gc-cream: #fbf8f1;
-  --gc-shadow: 0 10px 26px rgba(21, 49, 42, .075);
-  --bs-primary: #f97300;
-  --bs-success: #067d46;
-  --bs-body-color: #13253b;
-  --bs-body-bg: #f6f9f7;
-  color-scheme: light;
-}
 body { background: var(--bg); color: var(--text); }
 :focus-visible { outline: 3px solid #ec932c; outline-offset: 2px; }
 button, input, select { font: inherit; }
