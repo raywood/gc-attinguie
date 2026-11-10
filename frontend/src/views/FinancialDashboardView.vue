@@ -4,6 +4,7 @@ import FinanceExports from '../components/FinanceExports.vue'
 import GcIcon from '../components/GcIcon.vue'
 import { computed, onMounted, ref } from 'vue'
 import { api } from '../api'
+import { useGcDataRefresh } from '../services/gc-data-refresh'
 
 function abidjanMonth() {
   const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'Africa/Abidjan', year: 'numeric', month: '2-digit' }).formatToParts(new Date())
@@ -63,6 +64,7 @@ async function loadRecent() {
     recent.value = (res.items || []).slice(0, 4)
   } catch { recent.value = [] }
 }
+useGcDataRefresh(() => { load(); loadRecent() })
 onMounted(() => { load(); loadRecent() })
 </script>
 

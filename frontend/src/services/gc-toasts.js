@@ -1,4 +1,5 @@
 import { reactive } from 'vue'
+import { notifyGcDataChanged } from './gc-data-refresh'
 
 // Notifications pour les enregistrements métiers de GC-ATTINGUIÉ.
 export const gcToasts = reactive([])
@@ -83,8 +84,10 @@ export function installGcMutationToasts() {
     const toastId = startToast()
     try {
       const response = await originalFetch(input, init)
-      if (response.ok) finishToast(toastId, 'success', successMessage(method))
-      else finishToast(toastId, 'error', await errorMessage(response))
+      if (response.ok) {
+        finishToast(toastId, 'success', successMessage(method))
+        notifyGcDataChanged()
+      } else finishToast(toastId, 'error', await errorMessage(response))
       return response
     } catch (err) {
       finishToast(toastId, 'error', 'Échec : connexion interrompue. Enregistrement non confirmé.')

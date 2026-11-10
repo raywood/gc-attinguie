@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '../api'
+import { useGcDataRefresh } from '../services/gc-data-refresh'
 import { can } from '../security/abilities'
 import GcIcon from '../components/GcIcon.vue'
 
@@ -77,6 +78,7 @@ function exportCurrentPage() {
   a.click()
   URL.revokeObjectURL(url)
 }
+useGcDataRefresh(load)
 onMounted(load)
 </script>
 

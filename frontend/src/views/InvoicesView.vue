@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, ref, computed, onMounted } from 'vue'
 import { api } from '../api'
+import { useGcDataRefresh } from '../services/gc-data-refresh'
 
 const now = new Date()
 const period = ref(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`)
@@ -90,6 +91,30 @@ function changePage(next) {
   load()
 }
 
+// Relecture de la liste et de la facture ouverte après un changement externe.
+// Un encaissement en cours garde son propre cycle de sauvegarde.
+let gcRefreshSeq = 0
+async function gcRefreshInvoiceData() {
+  if (saving.value) return
+  const seq = ++gcRefreshSeq
+  const invoiceId = selected.value?.id
+  const params = new URLSearchParams({ period: period.value, page: String(page.value) })
+  try {
+    const [list, detail] = await Promise.all([
+      api.get(`/api/invoices?${params}`),
+      invoiceId == null ? Promise.resolve(null) : api.get(`/api/invoices/${invoiceId}`),
+    ])
+    if (seq !== gcRefreshSeq || saving.value) return
+    items.value = Array.isArray(list.items) ? list.items : []
+    total.value = Number(list.total || 0)
+    pageSize.value = Number(list.pageSize || 25)
+    if (detail && selected.value?.id === invoiceId) selected.value = detail
+  } catch (e) {
+    if (seq === gcRefreshSeq) error.value = e.message || 'Actualisation des factures impossible.'
+  }
+}
+
+useGcDataRefresh(gcRefreshInvoiceData)
 onMounted(load)
 </script>
 

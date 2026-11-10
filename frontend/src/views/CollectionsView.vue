@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { api } from '../api'
+import { useGcDataRefresh } from '../services/gc-data-refresh'
 
 const abidjanMonth = () => {
   const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'Africa/Abidjan', year: 'numeric', month: '2-digit' }).formatToParts(new Date())
@@ -41,6 +42,7 @@ async function load() {
 }
 function applyFilters() { page.value = 1; load() }
 function switchPage(next) { page.value = next; load() }
+useGcDataRefresh(load)
 onMounted(load)
 </script>
 
