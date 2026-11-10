@@ -2,6 +2,8 @@
 import { can } from '../security/abilities'
 import FinanceExports from '../components/FinanceExports.vue'
 import GcIcon from '../components/GcIcon.vue'
+import GcStatusBadge from '../components/GcStatusBadge.vue'
+import { businessStatusLabel } from '../utils/business-status'
 import { computed, onMounted, ref } from 'vue'
 import { api } from '../api'
 import { formatMoney, formatCompactAmount, currentAbidjanMonth, formatMonthFr } from '../utils/formatters'
@@ -110,7 +112,7 @@ onMounted(() => { load(); loadRecent() })
         <section class="gc-panel gc-recent-card">
           <div class="gc-panel-heading"><GcIcon name="shop" :size="23"/><h2>Commerces récents</h2></div>
           <div class="table-responsive"><table class="table gc-data-table align-middle"><thead><tr><th>#</th><th>Commerce</th><th>Activité</th><th>Quartier</th><th>Responsable</th><th>Statut</th></tr></thead><tbody>
-            <tr v-for="b in recent" :key="b.id"><td>{{ b.id }}</td><td class="gc-table-name">{{ b.name }}</td><td><span class="gc-activity-chip">{{ b.activityType?.label || '—' }}</span></td><td>{{ b.district || '—' }}</td><td>{{ b.manager?.fullName || '—' }}</td><td><span class="gc-status-chip" :class="b.status">{{ b.status === 'active' ? 'Actif' : b.status === 'suspended' ? 'Suspendu' : 'Fermé' }}</span></td></tr>
+            <tr v-for="b in recent" :key="b.id"><td>{{ b.id }}</td><td class="gc-table-name">{{ b.name }}</td><td><span class="gc-activity-chip">{{ b.activityType?.label || '—' }}</span></td><td>{{ b.district || '—' }}</td><td>{{ b.manager?.fullName || '—' }}</td><td><GcStatusBadge :status="b.status" :label="businessStatusLabel(b.status)" /></td></tr>
             <tr v-if="!recent.length"><td colspan="6" class="gc-table-empty">Aucun commerce récent accessible.</td></tr>
           </tbody></table></div>
         </section>

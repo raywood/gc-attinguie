@@ -5,6 +5,8 @@ import { api } from '../api'
 import { useGcDataRefresh } from '../services/gc-data-refresh'
 import { can } from '../security/abilities'
 import GcIcon from '../components/GcIcon.vue'
+import GcStatusBadge from '../components/GcStatusBadge.vue'
+import { businessStatusLabel } from '../utils/business-status'
 
 const route = useRoute()
 const items = ref([])
@@ -18,7 +20,7 @@ const status = ref('')
 const loading = ref(false)
 const error = ref('')
 const pages = computed(() => Math.max(1, Math.ceil(total.value / Math.max(1, pageSize.value))))
-const statusLabels = { active: 'Actif', suspended: 'Suspendu', closed: 'Fermé' }
+// Les libellés de statuts sont désormais partagés avec le tableau de bord.
 const districts = computed(() => [...new Set(items.value.map(b => b.district).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'fr')))
 const activities = computed(() => [...new Set(items.value.map(b => b.activityType?.label).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'fr')))
 const visibleItems = computed(() => items.value.filter(b =>
@@ -69,7 +71,7 @@ function safeCsvCell(value) {
 }
 function exportCurrentPage() {
   const headers = ['ID', 'Commerce', 'Adresse', 'Activité', 'Quartier', 'Gérant', 'Téléphone', 'Statut']
-  const rows = visibleItems.value.map(b => [b.id, b.name, b.address, b.activityType?.label, b.district, b.manager?.fullName, b.manager?.phone, statusLabels[b.status] ?? b.status])
+  const rows = visibleItems.value.map(b => [b.id, b.name, b.address, b.activityType?.label, b.district, b.manager?.fullName, b.manager?.phone, businessStatusLabel(b.status)])
   const csv = '\uFEFF' + [headers, ...rows].map(row => row.map(safeCsvCell).join(';')).join('\r\n')
   const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
   const a = document.createElement('a')
@@ -123,7 +125,7 @@ onMounted(load)
               <td>{{ b.district || '—' }}</td>
               <td>{{ b.manager?.fullName || '—' }}</td>
               <td class="gc-phone">{{ b.manager?.phone || '—' }}</td>
-              <td><span class="gc-status-chip" :class="b.status"><GcIcon :name="b.status === 'active' ? 'check' : 'alert'" :size="15"/> {{ statusLabels[b.status] ?? b.status }}</span></td>
+              <td><GcStatusBadge :status="b.status" :label="businessStatusLabel(b.status)" :icon="b.status === 'active' ? 'check' : 'alert'" /></td>
               <td><div class="gc-row-actions">
                 <RouterLink v-if="can('commerces.read')" :to="{ name: 'business-qr', params: { id: b.id } }" class="gc-icon-button" :aria-label="`QR Code de ${b.name}`" title="Voir le QR Code"><GcIcon name="qr" :size="19"/></RouterLink>
                 <RouterLink v-if="can('commerces.write')" :to="{ name: 'business-edit', params: { id: b.id } }" class="gc-icon-button gc-edit" :aria-label="`Modifier ${b.name}`" title="Modifier"><GcIcon name="edit" :size="18"/></RouterLink>
