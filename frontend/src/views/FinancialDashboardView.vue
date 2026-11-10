@@ -4,26 +4,18 @@ import FinanceExports from '../components/FinanceExports.vue'
 import GcIcon from '../components/GcIcon.vue'
 import { computed, onMounted, ref } from 'vue'
 import { api } from '../api'
+import { formatMoney, formatCompactAmount, currentAbidjanMonth, formatMonthFr } from '../utils/formatters'
 import { useGcDataRefresh } from '../services/gc-data-refresh'
 
-function abidjanMonth() {
-  const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'Africa/Abidjan', year: 'numeric', month: '2-digit' }).formatToParts(new Date())
-  return `${parts.find(x => x.type === 'year').value}-${parts.find(x => x.type === 'month').value}`
-}
-const period = ref(abidjanMonth())
+const period = ref(currentAbidjanMonth())
 const data = ref(null)
 const recent = ref([])
 const loading = ref(false)
 const error = ref('')
-const moneyFormat = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
-const money = amount => `${moneyFormat.format(Number(amount || 0))} FCFA`
-const monthText = value => {
-  if (!/^\d{4}-\d{2}$/.test(value ?? '')) return value || ''
-  const [year, month] = value.split('-').map(Number)
-  return new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(year, month - 1, 1)))
-}
+const money = formatMoney
+const monthText = formatMonthFr
 const trendMax = computed(() => Math.max(1, ...(data.value?.cashTrend ?? []).map(p => Number(p.amount) || 0)))
-const moneyCompact = value => new Intl.NumberFormat('fr-FR', { notation: 'compact', maximumFractionDigits: 1 }).format(Number(value || 0))
+const moneyCompact = formatCompactAmount
 const coloredActivities = computed(() => {
   const colors = ['#078a4b', '#fb7200', '#fbb720', '#116b80', '#7b66c5', '#6b9c74']
   const rows = (data.value?.byActivity ?? []).map(row => ({ ...row, positive: Math.max(0, Number(row.billed) || 0) }))

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { gcCatalogRequest } from '../services/gc-catalog-api'
+import { formatAmount } from '../utils/formatters'
 
 const rows = ref([])
 const csrf = ref('')
@@ -12,7 +13,7 @@ const info = ref('')
 const editingId = ref(null)
 const editorVisible = ref(false)
 const form = ref({ code: '', label: '' })
-const money = value => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(Number(value || 0))
+const money = formatAmount
 const filtered = computed(() => rows.value.filter(item => `${item.label} ${item.code}`.toLocaleLowerCase('fr').includes(query.value.trim().toLocaleLowerCase('fr'))))
 
 async function load() {

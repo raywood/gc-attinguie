@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { gcCatalogRequest } from '../services/gc-catalog-api'
+import { formatAmount } from '../utils/formatters'
 
 const activities = ref([])
 const tariffs = ref([])
@@ -20,7 +21,7 @@ const periods = [
   { value: 'yearly', label: 'Annuelle' },
 ]
 const labelPeriod = value => periods.find(p => p.value === value)?.label ?? value
-const money = value => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(Number(value || 0))
+const money = formatAmount
 const filtered = computed(() => tariffs.value.filter(item => !selectedActivity.value || String(item.activityTypeId) === String(selectedActivity.value)))
 
 async function load() {

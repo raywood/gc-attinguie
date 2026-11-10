@@ -1,23 +1,19 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { api } from '../api'
+import { formatMoney, currentAbidjanMonth, formatAbidjanDate } from '../utils/formatters'
 import { useGcDataRefresh } from '../services/gc-data-refresh'
 
-const abidjanMonth = () => {
-  const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'Africa/Abidjan', year: 'numeric', month: '2-digit' }).formatToParts(new Date())
-  return `${parts.find(p => p.type === 'year').value}-${parts.find(p => p.type === 'month').value}`
-}
-const period = ref(abidjanMonth())
+const period = ref(currentAbidjanMonth())
 const state = ref('all')
 const search = ref('')
 const page = ref(1)
 const payload = ref(null)
 const loading = ref(false)
 const error = ref('')
-const moneyFmt = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
-const money = (v) => `${moneyFmt.format(Number(v ?? 0))} FCFA`
+const money = formatMoney
 const stateText = (v) => ({ overdue: 'Échu', upcoming: 'Non échu', undated: 'Sans échéance' }[v] || v)
-const labelDate = (v) => v ? new Date(`${v}T12:00:00Z`).toLocaleDateString('fr-FR', { timeZone: 'Africa/Abidjan' }) : 'Non renseignée'
+const labelDate = formatAbidjanDate
 
 async function load() {
   if (!/^20\d{2}-(0[1-9]|1[0-2])$/.test(period.value)) {

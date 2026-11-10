@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, ref, computed, onMounted } from 'vue'
 import { api } from '../api'
+import { formatMoney } from '../utils/formatters'
 import { useGcDataRefresh } from '../services/gc-data-refresh'
 
 const now = new Date()
@@ -15,8 +16,7 @@ const saving = ref(false)
 const error = ref('')
 const notice = ref('')
 const payment = reactive({ amount: '', method: 'cash', reference: '' })
-const fmt = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 })
-const money = (value) => `${fmt.format(Number(value || 0))} FCFA`
+const money = formatMoney
 const pages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
 const statusLabels = { draft: 'Brouillon', issued: 'Émise', paid: 'Payée', cancelled: 'Annulée' }
 const methodLabels = { cash: 'Espèces', mobile_money: 'Mobile Money', bank_transfer: 'Virement', cheque: 'Chèque' }

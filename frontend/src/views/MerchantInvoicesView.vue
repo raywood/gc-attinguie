@@ -1,13 +1,14 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { api } from '../api'
+import { formatAmount } from '../utils/formatters'
 const loading = ref(true)
 const error = ref('')
 const items = ref([])
 const businesses = ref([])
 const selected = ref('')
 const visible = computed(() => items.value.filter(i => !selected.value || String(i.businessId) === selected.value))
-const money = v => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(Number(v || 0))
+const money = formatAmount
 async function load() {
   loading.value = true; error.value = ''
   try {
