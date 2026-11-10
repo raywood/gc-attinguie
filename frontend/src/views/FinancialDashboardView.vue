@@ -2,6 +2,7 @@
 import { can } from '../security/abilities'
 import FinanceExports from '../components/FinanceExports.vue'
 import GcIcon from '../components/GcIcon.vue'
+import GcKpiCard from '../components/GcKpiCard.vue'
 import GcStatusBadge from '../components/GcStatusBadge.vue'
 import { businessStatusLabel } from '../utils/business-status'
 import { computed, onMounted, ref } from 'vue'
@@ -77,10 +78,10 @@ onMounted(() => { load(); loadRecent() })
 
     <template v-if="data">
       <div class="gc-kpi-grid gc-dashboard-kpis">
-        <article class="gc-kpi gc-kpi-green"><GcIcon name="wallet" :size="30"/><div><span>Recettes encaissées</span><strong>{{ money(data.summary.cashCollected) }}</strong><small>{{ data.summary.paymentCount }} paiement(s) ce mois</small></div></article>
-        <article class="gc-kpi gc-kpi-orange"><GcIcon name="file" :size="30"/><div><span>Factures de la période</span><strong>{{ data.summary.invoiceCount }}</strong><small>{{ money(data.summary.billed) }} facturés</small></div></article>
-        <article class="gc-kpi gc-kpi-green"><GcIcon name="coins" :size="30"/><div><span>Reste à recouvrer</span><strong>{{ money(data.summary.remaining) }}</strong><small>{{ data.summary.outstandingInvoiceCount }} facture(s) avec solde</small></div></article>
-        <article class="gc-kpi gc-kpi-red"><GcIcon name="alert" :size="30"/><div><span>Impayés échus</span><strong>{{ money(data.summary.overdue) }}</strong><small>{{ data.summary.overdueInvoiceCount }} facture(s) échue(s)</small></div></article>
+        <GcKpiCard tone="green" icon="wallet" :icon-size="30" title="Recettes encaissées" :value="money(data.summary.cashCollected)" :detail="data.summary.paymentCount + ' paiement(s) ce mois'" />
+        <GcKpiCard tone="orange" icon="file" :icon-size="30" title="Factures de la période" :value="data.summary.invoiceCount" :detail="money(data.summary.billed) + ' facturés'" />
+        <GcKpiCard tone="green" icon="coins" :icon-size="30" title="Reste à recouvrer" :value="money(data.summary.remaining)" :detail="data.summary.outstandingInvoiceCount + ' facture(s) avec solde'" />
+        <GcKpiCard tone="red" icon="alert" :icon-size="30" title="Impayés échus" :value="money(data.summary.overdue)" :detail="data.summary.overdueInvoiceCount + ' facture(s) échue(s)'" />
       </div>
 
       <div class="gc-chart-grid">

@@ -5,6 +5,7 @@ import { api } from '../api'
 import { useGcDataRefresh } from '../services/gc-data-refresh'
 import { can } from '../security/abilities'
 import GcIcon from '../components/GcIcon.vue'
+import GcKpiCard from '../components/GcKpiCard.vue'
 import GcStatusBadge from '../components/GcStatusBadge.vue'
 import { businessStatusLabel } from '../utils/business-status'
 
@@ -95,9 +96,9 @@ onMounted(load)
     </div>
 
     <div class="gc-kpi-grid gc-business-kpis">
-      <article class="gc-kpi gc-kpi-green"><GcIcon name="shop" :size="31"/><div><span>Total des commerces</span><strong>{{ total }}</strong><small>Dans la recherche</small></div></article>
-      <article class="gc-kpi gc-kpi-green"><GcIcon name="check" :size="31"/><div><span>Actifs affichés</span><strong>{{ activeOnPage }}</strong><small>Sur la page courante</small></div></article>
-      <article class="gc-kpi gc-kpi-red"><GcIcon name="alert" :size="31"/><div><span>Inactifs affichés</span><strong>{{ inactiveOnPage }}</strong><small>Sur la page courante</small></div></article>
+      <GcKpiCard tone="green" icon="shop" :icon-size="31" title="Total des commerces" :value="total" detail="Dans la recherche" />
+      <GcKpiCard tone="green" icon="check" :icon-size="31" title="Actifs affichés" :value="activeOnPage" detail="Sur la page courante" />
+      <GcKpiCard tone="red" icon="alert" :icon-size="31" title="Inactifs affichés" :value="inactiveOnPage" detail="Sur la page courante" />
     </div>
 
     <div class="gc-business-toolbar">
