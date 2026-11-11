@@ -2,6 +2,8 @@
 import { computed, onMounted, ref } from 'vue'
 import { gcCatalogRequest } from '../services/gc-catalog-api'
 import { formatAmount } from '../utils/formatters'
+import GcEmptyState from '../components/GcEmptyState.vue'
+import GcLoadingState from '../components/GcLoadingState.vue'
 
 const rows = ref([])
 const csrf = ref('')
@@ -110,10 +112,10 @@ onMounted(load)
             <td>{{ money(item.monthlyFee) }} FCFA</td>
             <td><div class="gc-catalog-inline"><button class="btn gc-button-primary btn-sm" type="button" @click="startEdit(item)">Modifier</button><button class="btn btn-danger btn-sm" type="button" @click="remove(item)">Supprimer</button></div></td>
           </tr>
-          <tr v-if="!loading && !filtered.length"><td colspan="5" class="gc-catalog-empty">Aucune activité trouvée.</td></tr>
+          <tr v-if="!loading && !filtered.length"><GcEmptyState as="td" colspan="5" class="gc-catalog-empty">Aucune activité trouvée.</GcEmptyState></tr>
         </tbody>
       </table>
-      <p v-if="loading" role="status" class="gc-catalog-help">Chargement des activités…</p>
+      <GcLoadingState v-if="loading" class="gc-catalog-help">Chargement des activités…</GcLoadingState>
     </div>
   </section>
 </template>

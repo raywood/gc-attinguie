@@ -2,6 +2,8 @@
 import { computed, onMounted, ref } from 'vue'
 import { gcCatalogRequest } from '../services/gc-catalog-api'
 import { formatAmount } from '../utils/formatters'
+import GcEmptyState from '../components/GcEmptyState.vue'
+import GcLoadingState from '../components/GcLoadingState.vue'
 
 const activities = ref([])
 const tariffs = ref([])
@@ -124,10 +126,10 @@ onMounted(load)
             <td><span :class="item.active ? 'gc-catalog-status' : 'gc-catalog-status is-inactive'">{{ item.active ? 'Actif' : 'Inactif' }}</span></td>
             <td><div class="gc-catalog-inline"><button type="button" class="btn gc-button-primary btn-sm" @click="startEdit(item)">Modifier</button><button type="button" class="btn btn-danger btn-sm" @click="remove(item)">Supprimer</button></div></td>
           </tr>
-          <tr v-if="!loading && !filtered.length"><td colspan="5" class="gc-catalog-empty">Aucun tarif trouvé.</td></tr>
+          <tr v-if="!loading && !filtered.length"><GcEmptyState as="td" colspan="5" class="gc-catalog-empty">Aucun tarif trouvé.</GcEmptyState></tr>
         </tbody>
       </table>
-      <p v-if="loading" role="status" class="gc-catalog-help">Chargement des tarifs…</p>
+      <GcLoadingState v-if="loading" class="gc-catalog-help">Chargement des tarifs…</GcLoadingState>
     </div>
   </section>
 </template>
