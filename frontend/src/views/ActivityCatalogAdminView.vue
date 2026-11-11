@@ -4,6 +4,8 @@ import { gcCatalogRequest } from '../services/gc-catalog-api'
 import { formatAmount } from '../utils/formatters'
 import GcEmptyState from '../components/GcEmptyState.vue'
 import GcLoadingState from '../components/GcLoadingState.vue'
+import GcCatalogFormField from '../components/GcCatalogFormField.vue'
+import GcCatalogTablePanel from '../components/GcCatalogTablePanel.vue'
 
 const rows = ref([])
 const csrf = ref('')
@@ -89,12 +91,12 @@ onMounted(load)
     <div v-if="editorVisible" class="gc-catalog-panel">
       <h2>{{ editingId ? 'Modifier une activité' : 'Créer une activité' }}</h2>
       <form class="gc-catalog-form" @submit.prevent="save">
-        <label>Code de référence
+        <GcCatalogFormField>Code de référence
           <input v-model.trim="form.code" type="text" maxlength="50" required autocomplete="off" placeholder="EX. BOULANGERIE" />
-        </label>
-        <label>Libellé de l'activité
+        </GcCatalogFormField>
+        <GcCatalogFormField>Libellé de l'activité
           <input v-model.trim="form.label" type="text" maxlength="120" minlength="2" required placeholder="Ex. Boulangerie" />
-        </label>
+        </GcCatalogFormField>
         <p class="gc-catalog-help">Le code d'une activité déjà utilisée ne peut pas être renommé. Pour ses tarifs, ouvrez « Gérer les tarifs ».</p>
         <div class="gc-catalog-inline">
           <button type="submit" class="btn gc-button-primary" :disabled="saving">{{ saving ? 'Enregistrement…' : 'Enregistrer' }}</button>
@@ -102,7 +104,7 @@ onMounted(load)
         </div>
       </form>
     </div>
-    <div class="gc-catalog-panel gc-catalog-scroll">
+    <GcCatalogTablePanel>
       <table class="table gc-data-table">
         <thead><tr><th>Code</th><th>Activité</th><th>Commerces</th><th>Tarif mensuel actuel</th><th>Actions</th></tr></thead>
         <tbody>
@@ -116,6 +118,6 @@ onMounted(load)
         </tbody>
       </table>
       <GcLoadingState v-if="loading" class="gc-catalog-help">Chargement des activités…</GcLoadingState>
-    </div>
+    </GcCatalogTablePanel>
   </section>
 </template>

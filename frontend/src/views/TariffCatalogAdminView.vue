@@ -4,6 +4,8 @@ import { gcCatalogRequest } from '../services/gc-catalog-api'
 import { formatAmount } from '../utils/formatters'
 import GcEmptyState from '../components/GcEmptyState.vue'
 import GcLoadingState from '../components/GcLoadingState.vue'
+import GcCatalogFormField from '../components/GcCatalogFormField.vue'
+import GcCatalogTablePanel from '../components/GcCatalogTablePanel.vue'
 
 const activities = ref([])
 const tariffs = ref([])
@@ -99,15 +101,15 @@ onMounted(load)
     <div v-if="editorVisible" class="gc-catalog-panel">
       <h2>{{ editingId ? 'Modifier un tarif' : 'Créer un tarif' }}</h2>
       <form class="gc-catalog-form" @submit.prevent="save">
-        <label>Activité commerciale
+        <GcCatalogFormField>Activité commerciale
           <select v-model="form.activityTypeId" :disabled="!!editingId" required><option value="" disabled>Choisir</option><option v-for="a in activities" :key="a.id" :value="a.id">{{ a.label }}</option></select>
-        </label>
-        <label>Périodicité
+        </GcCatalogFormField>
+        <GcCatalogFormField>Périodicité
           <select v-model="form.period" :disabled="!!editingId" required><option v-for="p in periods" :key="p.value" :value="p.value">{{ p.label }}</option></select>
-        </label>
-        <label>Montant (FCFA)
+        </GcCatalogFormField>
+        <GcCatalogFormField>Montant (FCFA)
           <input v-model.trim="form.amount" type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]{1,2})?" required placeholder="Ex. 5000" />
-        </label>
+        </GcCatalogFormField>
         <label class="gc-catalog-checkbox"><input v-model="form.active" type="checkbox" /> Tarif actif</label>
         <div class="gc-catalog-inline">
           <button class="btn gc-button-primary" :disabled="saving" type="submit">{{ saving ? 'Enregistrement…' : 'Enregistrer' }}</button>
@@ -115,7 +117,7 @@ onMounted(load)
         </div>
       </form>
     </div>
-    <div class="gc-catalog-panel gc-catalog-scroll">
+    <GcCatalogTablePanel>
       <table class="table gc-data-table">
         <thead><tr><th>Activité</th><th>Périodicité</th><th>Montant</th><th>État</th><th>Actions</th></tr></thead>
         <tbody>
@@ -130,6 +132,6 @@ onMounted(load)
         </tbody>
       </table>
       <GcLoadingState v-if="loading" class="gc-catalog-help">Chargement des tarifs…</GcLoadingState>
-    </div>
+    </GcCatalogTablePanel>
   </section>
 </template>
