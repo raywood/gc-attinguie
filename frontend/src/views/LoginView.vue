@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { auth } from '../auth'
 import { ApiError } from '../api'
 import GcIcon from '../components/GcIcon.vue'
+import { branding } from '../services/gc-branding'
 
 const route = useRoute()
 const router = useRouter()
@@ -42,12 +43,12 @@ async function submit() {
     </div>
     <div class="gc-login-layout">
       <section class="gc-login-left" aria-labelledby="gc-login-title">
-        <img src="/gc-attinguie-logo.png" class="gc-login-watermark" alt="" aria-hidden="true" />
+        <img :src="branding.logoUrl" class="gc-login-watermark" alt="" aria-hidden="true" />
         <div class="gc-login-foreground">
           <div class="gc-login-heading-brand">
-            <img src="/gc-attinguie-logo.png" alt="Emblème traditionnel du Dandou" class="gc-login-emblem" />
+            <img :src="branding.logoUrl" :alt="'Logo de ' + branding.appName" class="gc-login-emblem" />
             <div class="gc-login-brand-text">
-              <strong>GC-ATTINGUIÉ</strong>
+              <strong>{{ branding.appName }}</strong>
               <span>Gestion communale des commerces</span>
             </div>
           </div>
@@ -62,7 +63,7 @@ async function submit() {
 
           <form class="gc-login-form" @submit.prevent="submit">
             <label for="gc-email"><span class="gc-field-label"><GcIcon name="mail" :size="17" /> Adresse e-mail</span></label>
-            <input id="gc-email" v-model="email" type="email" class="form-control" autocomplete="username" placeholder="Ex. : utilisateur@attinguie.ci" required autofocus />
+            <input id="gc-email" v-model="email" type="email" class="form-control" autocomplete="username" placeholder="Ex. : agent@mairie.ci" required autofocus />
 
             <label for="gc-password"><span class="gc-field-label"><GcIcon name="lock" :size="17" /> Mot de passe</span></label>
             <div class="gc-password-wrap">
@@ -82,7 +83,7 @@ async function submit() {
         <div class="gc-login-right-content">
           <h2>Pilotez les commerces,<br />la facturation et les paiements<br />en toute simplicité</h2>
           <div class="gc-login-window" aria-hidden="true">
-            <div class="gc-window-top"><span></span><span></span><span></span><b>GC-ATTINGUIÉ</b></div>
+            <div class="gc-window-top"><span></span><span></span><span></span><b>{{ branding.appName }}</b></div>
             <div class="gc-window-body">
               <div class="gc-window-menu"><i></i><i></i><i></i><i></i></div>
               <div class="gc-window-panels">

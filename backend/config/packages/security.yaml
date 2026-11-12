@@ -30,6 +30,7 @@ security:
                 path: api_logout
 
     access_control:
+        - { path: '^/api/public/branding(?:/logo)?$', roles: PUBLIC_ACCESS, methods: [GET] }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/receipts/verify/, roles: PUBLIC_ACCESS, methods: [GET] }
         - { path: "^/api/public/businesses/[a-f0-9]{64}$", roles: PUBLIC_ACCESS, methods: [GET] }

@@ -8,6 +8,7 @@ import GcIcon from '../components/GcIcon.vue'
 import GcKpiCard from '../components/GcKpiCard.vue'
 import GcStatusBadge from '../components/GcStatusBadge.vue'
 import { businessStatusLabel } from '../utils/business-status'
+import { brandingSlug } from '../services/gc-branding'
 
 const route = useRoute()
 const items = ref([])
@@ -77,7 +78,7 @@ function exportCurrentPage() {
   const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
   const a = document.createElement('a')
   a.href = url
-  a.download = `gc-attinguie-commerces-page-${page.value}.csv`
+  a.download = `${brandingSlug()}-commerces-page-${page.value}.csv`
   a.click()
   URL.revokeObjectURL(url)
 }

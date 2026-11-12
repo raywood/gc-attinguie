@@ -9,6 +9,7 @@ import { computed, onMounted, ref } from 'vue'
 import { api } from '../api'
 import { formatMoney, formatCompactAmount, currentAbidjanMonth, formatMonthFr } from '../utils/formatters'
 import { useGcDataRefresh } from '../services/gc-data-refresh'
+import { branding } from '../services/gc-branding'
 
 const period = ref(currentAbidjanMonth())
 const data = ref(null)
@@ -66,7 +67,7 @@ onMounted(() => { load(); loadRecent() })
 <template>
   <section class="gc-page gc-dashboard">
     <div class="gc-page-hero gc-dashboard-hero">
-      <div class="gc-hero-copy"><span class="gc-hero-icon"><GcIcon name="home" :size="26"/></span><div><h1>Bienvenue sur GC-ATTINGUIÉ</h1><p>La plateforme de gestion des commerces de la Commune d’Attinguié.</p></div></div>
+      <div class="gc-hero-copy"><span class="gc-hero-icon"><GcIcon name="home" :size="26"/></span><div><h1>Bienvenue sur {{ branding.appName }}</h1><p style="white-space: pre-line">{{ branding.dashboardDescription }}</p></div></div>
       <label class="gc-hero-period" for="gc-dashboard-period"><GcIcon name="calendar" :size="17"/><span>Période :</span><input id="gc-dashboard-period" v-model="period" type="month" min="2000-01" max="2099-12"/></label>
     </div>
     <div class="gc-dashboard-actions">

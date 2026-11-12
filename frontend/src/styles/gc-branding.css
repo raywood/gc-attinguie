@@ -1,0 +1,11 @@
+/* Adaptation limitée au formulaire de personnalisation ; charte existante préservée. */
+.gc-branding-admin .gc-branding-description { grid-column: 1 / -1; }
+.gc-branding-admin textarea.form-control { min-height: 112px; resize: vertical; }
+.gc-branding-logo-layout { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 1.5rem; align-items: center; }
+.gc-branding-logo-layout > div { display: grid; gap: .75rem; justify-items: start; }
+.gc-branding-logo-layout label { font-size: .92rem; font-weight: 650; color: #224b39; }
+.gc-branding-preview { width: 160px; height: 160px; max-width: 100%; object-fit: contain; padding: .6rem; border: 1px solid #dae5dd; background: #fff; border-radius: 14px; }
+.gc-branding-logo-layout input { max-width: 100%; }
+.gc-branding-example-title { font-size: 1.35rem; font-weight: 800; color: #075e3d; }
+.gc-branding-example-description { white-space: pre-line; }
+@media (max-width: 650px) { .gc-branding-logo-layout { grid-template-columns: minmax(0, 1fr); } }

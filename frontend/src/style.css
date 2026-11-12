@@ -62,7 +62,7 @@ tr:last-child td { border-bottom: 0; }
 .login-watermark {
   position: absolute;
   inset: 0;
-  background-image: url('/gc-attinguie-logo.png');
+  background-image: var(--gc-logo-image, url('/gc-attinguie-logo.png'));
   background-repeat: no-repeat;
   background-position: center;
   background-size: 78%;
