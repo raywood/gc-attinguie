@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'managers')]
+#[ORM\Index(name: 'IDX_GC_MANAGERS_USER', columns: ['user_id'])]
 class Manager
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
