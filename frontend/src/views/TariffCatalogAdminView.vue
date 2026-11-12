@@ -17,14 +17,9 @@ const info = ref('')
 const selectedActivity = ref('')
 const editorVisible = ref(false)
 const editingId = ref(null)
-const form = ref({ activityTypeId: '', period: 'daily', amount: '', active: true })
-const periods = [
-  { value: 'daily', label: 'Journalière' },
-  { value: 'weekly', label: 'Hebdomadaire' },
-  { value: 'monthly', label: 'Mensuelle' },
-  { value: 'yearly', label: 'Annuelle' },
-]
-const labelPeriod = value => periods.find(p => p.value === value)?.label ?? value
+const form = ref({ activityTypeId: '', period: '', amount: '', active: true })
+const periods = ref([])
+const labelPeriod = value => periods.value.find(p => p.value === value)?.label ?? value
 const money = formatAmount
 const filtered = computed(() => tariffs.value.filter(item => !selectedActivity.value || String(item.activityTypeId) === String(selectedActivity.value)))
 
@@ -32,19 +27,26 @@ async function load() {
   loading.value = true
   error.value = ''
   try {
-    const [a, t] = await Promise.all([
+    const [a, t, p] = await Promise.all([
       gcCatalogRequest('GET', '/api/admin/catalog/activities'),
       gcCatalogRequest('GET', '/api/admin/catalog/tariffs'),
+      gcCatalogRequest('GET', '/api/admin/catalog/periods'),
     ])
+    if (!Array.isArray(p.items) || p.items.length === 0 ||
+        !p.items.every(x => typeof x.value === 'string' && typeof x.label === 'string')) {
+      throw new Error('Référentiel des périodicités indisponible.')
+    }
     activities.value = a.items
     tariffs.value = t.items
+    periods.value = p.items
     csrf.value = t.csrf
   } catch (e) { error.value = e.message }
   finally { loading.value = false }
 }
 function startCreate() {
+  if (!activities.value.length || !periods.value.length) return
   editingId.value = null
-  form.value = { activityTypeId: selectedActivity.value || activities.value[0]?.id || '', period: 'daily', amount: '', active: true }
+  form.value = { activityTypeId: selectedActivity.value || activities.value[0]?.id || '', period: periods.value[0].value, amount: '', active: true }
   editorVisible.value = true; error.value = ''; info.value = ''
 }
 function startEdit(item) {
@@ -87,7 +89,7 @@ onMounted(load)
   <section class="gc-catalog">
     <div class="gc-catalog-heading">
       <div><h1>Grille tarifaire</h1><p>Montants en francs CFA (XOF), définis par activité et périodicité.</p></div>
-      <button class="btn gc-button-primary" type="button" :disabled="!activities.length" @click="startCreate">+ Nouveau tarif</button>
+      <button class="btn gc-button-primary" type="button" :disabled="!activities.length || !periods.length || loading" @click="startCreate">+ Nouveau tarif</button>
     </div>
     <div class="gc-catalog-notice" role="note"><strong>Facturation actuelle :</strong> seul le tarif <strong>mensuel</strong> est relié au moteur de génération. Les montants journaliers, hebdomadaires et annuels sont enregistrés mais ne déclenchent pas encore de facturation. Une modification mensuelle peut affecter les prochaines factures, jamais celles déjà émises.</div>
     <div class="gc-catalog-actions">
