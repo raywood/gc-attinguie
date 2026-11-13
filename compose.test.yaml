@@ -1,0 +1,63 @@
+name: gc-attinguie-test
+
+services:
+  db-test:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: gc_test_admin
+      POSTGRES_PASSWORD: test-admin-only
+      POSTGRES_DB: gc_attinguie_test
+      TZ: Africa/Abidjan
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+      - ./docker/test/init-test-db.sql:/docker-entrypoint-initdb.d/10-test.sql:ro
+    networks: [test]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U gc_test_admin -d gc_attinguie_test"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+  test-runner:
+    build: ./docker/php
+    working_dir: /var/www/backend
+    entrypoint: [php]
+    # No kernel boot, database access or automatic migration on startup.
+    command: [vendor/bin/phpunit, --testsuite, unit]
+    environment:
+      APP_ENV: test
+      APP_DEBUG: '0'
+      KERNEL_CLASS: App\Kernel
+      APP_SECRET: integration-test-only
+      DATABASE_URL: 'postgresql://gc_test_runner:test-only@db-test:5432/gc_attinguie_test?serverVersion=16&charset=utf8'
+      MESSENGER_TRANSPORT_DSN: 'in-memory://'
+      TEST_TOKEN: ''
+      INVOICE_DUE_DAYS: '15'
+      RECEIPT_SIGNING_KEY: integration-test-signing-key-not-for-production
+      RECEIPT_VERIFY_BASE_URL: https://gc-test.invalid
+      BUSINESS_VERIFY_BASE_URL: https://gc-test.invalid
+      TZ: Africa/Abidjan
+    # Selective mounts deliberately exclude every real .env and local secret.
+    volumes:
+      - ./backend/src:/var/www/backend/src:ro
+      - ./backend/config:/var/www/backend/config:ro
+      - ./backend/migrations:/var/www/backend/migrations:ro
+      - ./backend/tests:/var/www/backend/tests:ro
+      - ./backend/vendor:/var/www/backend/vendor:ro
+      - ./backend/composer.json:/var/www/backend/composer.json:ro
+      - ./backend/composer.lock:/var/www/backend/composer.lock:ro
+      - ./backend/phpunit.xml.dist:/var/www/backend/phpunit.xml.dist:ro
+    tmpfs:
+      - /var/www/backend/var
+      - /tmp
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [test]
+
+volumes:
+  postgres_test_data:
+
+networks:
+  test:
+    internal: true
