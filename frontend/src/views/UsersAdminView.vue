@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { api } from '../api'
+import { brandingSlug } from '../services/gc-branding'
 
 const userList = ref([])
 const total = ref(0)
@@ -135,7 +136,7 @@ function exportInvitations() {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'invitations-utilisateurs-gc-attinguie.csv'
+  a.download = `invitations-utilisateurs-${brandingSlug()}.csv`
   a.click()
   URL.revokeObjectURL(url)
 }

@@ -5,6 +5,7 @@ import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { can, isAdministrator } from './security/abilities'
 import { auth } from './auth'
 import GcIcon from './components/GcIcon.vue'
+import { branding } from './services/gc-branding'
 
 const router = useRouter()
 const route = useRoute()
@@ -13,6 +14,7 @@ const headerSearch = ref('')
 const isAdmin = computed(() => isAdministrator())
 const pageTitle = computed(() => {
   if (route.path.startsWith('/mon-espace/factures')) return 'Mes factures'
+  if (route.path.startsWith('/administration/personnalisation')) return 'Personnalisation'
   if (route.path.startsWith('/catalogue/activites')) return 'Activités commerciales'
   if (route.path.startsWith('/catalogue/tarifs')) return 'Grille tarifaire'
   if (route.path.startsWith('/tableau-de-bord')) return 'Tableau de bord'
@@ -24,7 +26,7 @@ const pageTitle = computed(() => {
   if (route.path.startsWith('/mon-espace/commerces')) return 'Mes commerces'
   if (route.path.startsWith('/mon-profil')) return 'Mon profil'
   if (route.path.startsWith('/annulations')) return 'Annulations'
-  return 'GC-ATTINGUIÉ'
+  return branding.appName
 })
 const userLabel = computed(() => auth.user?.email || 'Compte utilisateur')
 const userInitial = computed(() => userLabel.value.charAt(0).toUpperCase())
@@ -47,8 +49,8 @@ async function onLogout() {
     <div v-if="menuOpen" class="gc-mobile-overlay" @click="menuOpen = false" aria-hidden="true"></div>
     <aside class="gc-sidebar" :class="{ 'is-open': menuOpen }" aria-label="Navigation principale">
       <div class="gc-side-brand">
-        <img src="/gc-attinguie-logo.png" alt="Emblème traditionnel du Dandou" class="gc-side-emblem" />
-        <strong>GC-ATTINGUIÉ</strong>
+        <img :src="branding.logoUrl" :alt="'Logo de ' + branding.appName" class="gc-side-emblem" />
+        <strong>{{ branding.appName }}</strong>
         <span>Gestion communale des commerces</span>
       </div>
       <nav class="gc-side-nav">
@@ -72,6 +74,9 @@ async function onLogout() {
           <GcIcon name="file"/> <span>Mes factures</span>
         </RouterLink>
         <div class="gc-side-section">Administration</div>
+        <RouterLink v-if="isAdmin" to="/administration/personnalisation" class="gc-side-link">
+          <GcIcon name="settings"/> <span>Personnalisation</span>
+        </RouterLink>
         <RouterLink v-if="isAdmin" to="/catalogue/activites" class="gc-side-link">
           <GcIcon name="shop"/> <span>Activités commerciales</span>
         </RouterLink>
@@ -97,7 +102,7 @@ async function onLogout() {
       </nav>
       <div class="gc-side-bottom">
         <span class="gc-side-flag"><i></i><i></i><i></i></span>
-        <small>Commune d’Attinguié · Côte d’Ivoire</small>
+        <small>{{ branding.organizationName }} · Côte d’Ivoire</small>
       </div>
     </aside>
 

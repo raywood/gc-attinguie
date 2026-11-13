@@ -17,6 +17,11 @@ security:
             provider: app_user_provider
             entry_point: App\Security\ApiEntryPoint
             user_checker: App\Security\UserChecker
+
+            login_throttling:
+                max_attempts: 5
+                interval: '15 minutes'
+
             json_login:
                 check_path: api_login
                 username_path: email
@@ -25,6 +30,7 @@ security:
                 path: api_logout
 
     access_control:
+        - { path: '^/api/public/branding(?:/logo)?$', roles: PUBLIC_ACCESS, methods: [GET] }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/receipts/verify/, roles: PUBLIC_ACCESS, methods: [GET] }
         - { path: "^/api/public/businesses/[a-f0-9]{64}$", roles: PUBLIC_ACCESS, methods: [GET] }

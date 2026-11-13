@@ -1,0 +1,6 @@
+doctrine:
+    dbal:
+        # Fixed test-only destination: never inherit a real DATABASE_URL here.
+        url: 'postgresql://gc_test_runner:test-only@db-test:5432/gc_attinguie_test?serverVersion=16&charset=utf8'
+        dbname_suffix: ''
+        server_version: '16'

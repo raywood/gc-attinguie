@@ -10,6 +10,7 @@ use App\Entity\DailyActivityRecord;
 use App\Entity\MerchantBusinessAccess;
 use App\Entity\User;
 use App\Enum\BusinessStatus;
+use App\Service\BillingPeriodCatalog;
 use App\Service\BillingProfileResolver;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -74,7 +75,7 @@ final class AdminBillingController extends AbstractController
         $date = $this->date($body['effectiveFrom'] ?? null);
         $today = new \DateTimeImmutable('today', new \DateTimeZone('Africa/Abidjan'));
         $firstNextMonth = $today->modify('first day of next month');
-        if (!is_string($frequency) || !in_array($frequency, ['daily', 'weekly', 'monthly', 'yearly'], true)
+        if (!is_string($frequency) || !BillingPeriodCatalog::accepts($frequency)
             || $date === null || $date->format('d') !== '01' || $date < $firstNextMonth
             || $date > $firstNextMonth->modify('+24 months') || mb_strlen($reason) < 6 || mb_strlen($reason) > 255) {
             return $this->json(['error' => 'Périodicité, date d’effet (1er jour d’un mois futur) ou motif (6-255 caractères) invalide.'], 422);

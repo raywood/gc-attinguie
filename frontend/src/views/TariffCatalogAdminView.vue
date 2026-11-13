@@ -1,6 +1,11 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { gcCatalogRequest } from '../services/gc-catalog-api'
+import { formatAmount } from '../utils/formatters'
+import GcEmptyState from '../components/GcEmptyState.vue'
+import GcLoadingState from '../components/GcLoadingState.vue'
+import GcCatalogFormField from '../components/GcCatalogFormField.vue'
+import GcCatalogTablePanel from '../components/GcCatalogTablePanel.vue'
 
 const activities = ref([])
 const tariffs = ref([])
@@ -12,34 +17,36 @@ const info = ref('')
 const selectedActivity = ref('')
 const editorVisible = ref(false)
 const editingId = ref(null)
-const form = ref({ activityTypeId: '', period: 'daily', amount: '', active: true })
-const periods = [
-  { value: 'daily', label: 'Journalière' },
-  { value: 'weekly', label: 'Hebdomadaire' },
-  { value: 'monthly', label: 'Mensuelle' },
-  { value: 'yearly', label: 'Annuelle' },
-]
-const labelPeriod = value => periods.find(p => p.value === value)?.label ?? value
-const money = value => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(Number(value || 0))
+const form = ref({ activityTypeId: '', period: '', amount: '', active: true })
+const periods = ref([])
+const labelPeriod = value => periods.value.find(p => p.value === value)?.label ?? value
+const money = formatAmount
 const filtered = computed(() => tariffs.value.filter(item => !selectedActivity.value || String(item.activityTypeId) === String(selectedActivity.value)))
 
 async function load() {
   loading.value = true
   error.value = ''
   try {
-    const [a, t] = await Promise.all([
+    const [a, t, p] = await Promise.all([
       gcCatalogRequest('GET', '/api/admin/catalog/activities'),
       gcCatalogRequest('GET', '/api/admin/catalog/tariffs'),
+      gcCatalogRequest('GET', '/api/admin/catalog/periods'),
     ])
+    if (!Array.isArray(p.items) || p.items.length === 0 ||
+        !p.items.every(x => typeof x.value === 'string' && typeof x.label === 'string')) {
+      throw new Error('Référentiel des périodicités indisponible.')
+    }
     activities.value = a.items
     tariffs.value = t.items
+    periods.value = p.items
     csrf.value = t.csrf
   } catch (e) { error.value = e.message }
   finally { loading.value = false }
 }
 function startCreate() {
+  if (!activities.value.length || !periods.value.length) return
   editingId.value = null
-  form.value = { activityTypeId: selectedActivity.value || activities.value[0]?.id || '', period: 'daily', amount: '', active: true }
+  form.value = { activityTypeId: selectedActivity.value || activities.value[0]?.id || '', period: periods.value[0].value, amount: '', active: true }
   editorVisible.value = true; error.value = ''; info.value = ''
 }
 function startEdit(item) {
@@ -82,7 +89,7 @@ onMounted(load)
   <section class="gc-catalog">
     <div class="gc-catalog-heading">
       <div><h1>Grille tarifaire</h1><p>Montants en francs CFA (XOF), définis par activité et périodicité.</p></div>
-      <button class="btn gc-button-primary" type="button" :disabled="!activities.length" @click="startCreate">+ Nouveau tarif</button>
+      <button class="btn gc-button-primary" type="button" :disabled="!activities.length || !periods.length || loading" @click="startCreate">+ Nouveau tarif</button>
     </div>
     <div class="gc-catalog-notice" role="note"><strong>Facturation actuelle :</strong> seul le tarif <strong>mensuel</strong> est relié au moteur de génération. Les montants journaliers, hebdomadaires et annuels sont enregistrés mais ne déclenchent pas encore de facturation. Une modification mensuelle peut affecter les prochaines factures, jamais celles déjà émises.</div>
     <div class="gc-catalog-actions">
@@ -96,15 +103,15 @@ onMounted(load)
     <div v-if="editorVisible" class="gc-catalog-panel">
       <h2>{{ editingId ? 'Modifier un tarif' : 'Créer un tarif' }}</h2>
       <form class="gc-catalog-form" @submit.prevent="save">
-        <label>Activité commerciale
+        <GcCatalogFormField>Activité commerciale
           <select v-model="form.activityTypeId" :disabled="!!editingId" required><option value="" disabled>Choisir</option><option v-for="a in activities" :key="a.id" :value="a.id">{{ a.label }}</option></select>
-        </label>
-        <label>Périodicité
+        </GcCatalogFormField>
+        <GcCatalogFormField>Périodicité
           <select v-model="form.period" :disabled="!!editingId" required><option v-for="p in periods" :key="p.value" :value="p.value">{{ p.label }}</option></select>
-        </label>
-        <label>Montant (FCFA)
+        </GcCatalogFormField>
+        <GcCatalogFormField>Montant (FCFA)
           <input v-model.trim="form.amount" type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]{1,2})?" required placeholder="Ex. 5000" />
-        </label>
+        </GcCatalogFormField>
         <label class="gc-catalog-checkbox"><input v-model="form.active" type="checkbox" /> Tarif actif</label>
         <div class="gc-catalog-inline">
           <button class="btn gc-button-primary" :disabled="saving" type="submit">{{ saving ? 'Enregistrement…' : 'Enregistrer' }}</button>
@@ -112,7 +119,7 @@ onMounted(load)
         </div>
       </form>
     </div>
-    <div class="gc-catalog-panel gc-catalog-scroll">
+    <GcCatalogTablePanel>
       <table class="table gc-data-table">
         <thead><tr><th>Activité</th><th>Périodicité</th><th>Montant</th><th>État</th><th>Actions</th></tr></thead>
         <tbody>
@@ -123,10 +130,10 @@ onMounted(load)
             <td><span :class="item.active ? 'gc-catalog-status' : 'gc-catalog-status is-inactive'">{{ item.active ? 'Actif' : 'Inactif' }}</span></td>
             <td><div class="gc-catalog-inline"><button type="button" class="btn gc-button-primary btn-sm" @click="startEdit(item)">Modifier</button><button type="button" class="btn btn-danger btn-sm" @click="remove(item)">Supprimer</button></div></td>
           </tr>
-          <tr v-if="!loading && !filtered.length"><td colspan="5" class="gc-catalog-empty">Aucun tarif trouvé.</td></tr>
+          <tr v-if="!loading && !filtered.length"><GcEmptyState as="td" colspan="5" class="gc-catalog-empty">Aucun tarif trouvé.</GcEmptyState></tr>
         </tbody>
       </table>
-      <p v-if="loading" role="status" class="gc-catalog-help">Chargement des tarifs…</p>
-    </div>
+      <GcLoadingState v-if="loading" class="gc-catalog-help">Chargement des tarifs…</GcLoadingState>
+    </GcCatalogTablePanel>
   </section>
 </template>

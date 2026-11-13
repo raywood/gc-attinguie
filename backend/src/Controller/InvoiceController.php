@@ -8,6 +8,8 @@ use App\Entity\Payment;
 use App\Entity\Receipt;
 use App\Enum\PaymentMethod;
 use App\Exception\PaymentRejectedException;
+use App\Exception\DuplicatePaymentReferenceException;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use App\Service\PaymentRecorder;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -95,12 +97,14 @@ final class InvoiceController extends AbstractController
             return $this->json(['error' => 'Référence obligatoire (1 à 100 caractères).'], 422);
         }
         $reference = trim($reference);
-        if ($this->em->getRepository(Payment::class)->findOneBy(['invoice' => $invoice, 'reference' => $reference]) !== null) {
-            return $this->json(['error' => 'Cette référence est déjà utilisée pour cette facture. Vérifiez les encaissements.'], 409);
-        }
-
+        // Le contrôle anti-doublon est désormais dans la transaction de PaymentRecorder.
         try {
             $payment = $recorder->record($invoice, $amount, $method, $reference);
+        } catch (DuplicatePaymentReferenceException $e) {
+            return $this->json(['error' => $e->getMessage()], 409);
+        } catch (UniqueConstraintViolationException) {
+            // Deux requêtes concurrentes : PostgreSQL reste l'arbitre final.
+            return $this->json(['error' => 'Référence de paiement déjà enregistrée.'], 409);
         } catch (PaymentRejectedException $e) {
             return $this->json(['error' => $e->getMessage()], 422);
         }

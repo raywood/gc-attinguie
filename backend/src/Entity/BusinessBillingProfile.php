@@ -10,7 +10,6 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity]
 #[ORM\Table(name: 'business_billing_profiles')]
 #[ORM\UniqueConstraint(name: 'UNIQ_GC_BILLING_BUSINESS_EFFECTIVE', columns: ['business_id', 'effective_from'])]
-#[ORM\Index(name: 'IDX_GC_BILLING_BUSINESS_DATE', columns: ['business_id', 'effective_from'])]
 class BusinessBillingProfile
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]

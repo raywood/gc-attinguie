@@ -2,8 +2,13 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '../api'
+import { useGcDataRefresh } from '../services/gc-data-refresh'
 import { can } from '../security/abilities'
 import GcIcon from '../components/GcIcon.vue'
+import GcKpiCard from '../components/GcKpiCard.vue'
+import GcStatusBadge from '../components/GcStatusBadge.vue'
+import { businessStatusLabel } from '../utils/business-status'
+import { brandingSlug } from '../services/gc-branding'
 
 const route = useRoute()
 const items = ref([])
@@ -17,7 +22,7 @@ const status = ref('')
 const loading = ref(false)
 const error = ref('')
 const pages = computed(() => Math.max(1, Math.ceil(total.value / Math.max(1, pageSize.value))))
-const statusLabels = { active: 'Actif', suspended: 'Suspendu', closed: 'Fermé' }
+// Les libellés de statuts sont désormais partagés avec le tableau de bord.
 const districts = computed(() => [...new Set(items.value.map(b => b.district).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'fr')))
 const activities = computed(() => [...new Set(items.value.map(b => b.activityType?.label).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'fr')))
 const visibleItems = computed(() => items.value.filter(b =>
@@ -68,15 +73,16 @@ function safeCsvCell(value) {
 }
 function exportCurrentPage() {
   const headers = ['ID', 'Commerce', 'Adresse', 'Activité', 'Quartier', 'Gérant', 'Téléphone', 'Statut']
-  const rows = visibleItems.value.map(b => [b.id, b.name, b.address, b.activityType?.label, b.district, b.manager?.fullName, b.manager?.phone, statusLabels[b.status] ?? b.status])
+  const rows = visibleItems.value.map(b => [b.id, b.name, b.address, b.activityType?.label, b.district, b.manager?.fullName, b.manager?.phone, businessStatusLabel(b.status)])
   const csv = '\uFEFF' + [headers, ...rows].map(row => row.map(safeCsvCell).join(';')).join('\r\n')
   const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
   const a = document.createElement('a')
   a.href = url
-  a.download = `gc-attinguie-commerces-page-${page.value}.csv`
+  a.download = `${brandingSlug()}-commerces-page-${page.value}.csv`
   a.click()
   URL.revokeObjectURL(url)
 }
+useGcDataRefresh(load)
 onMounted(load)
 </script>
 
@@ -91,9 +97,9 @@ onMounted(load)
     </div>
 
     <div class="gc-kpi-grid gc-business-kpis">
-      <article class="gc-kpi gc-kpi-green"><GcIcon name="shop" :size="31"/><div><span>Total des commerces</span><strong>{{ total }}</strong><small>Dans la recherche</small></div></article>
-      <article class="gc-kpi gc-kpi-green"><GcIcon name="check" :size="31"/><div><span>Actifs affichés</span><strong>{{ activeOnPage }}</strong><small>Sur la page courante</small></div></article>
-      <article class="gc-kpi gc-kpi-red"><GcIcon name="alert" :size="31"/><div><span>Inactifs affichés</span><strong>{{ inactiveOnPage }}</strong><small>Sur la page courante</small></div></article>
+      <GcKpiCard tone="green" icon="shop" :icon-size="31" title="Total des commerces" :value="total" detail="Dans la recherche" />
+      <GcKpiCard tone="green" icon="check" :icon-size="31" title="Actifs affichés" :value="activeOnPage" detail="Sur la page courante" />
+      <GcKpiCard tone="red" icon="alert" :icon-size="31" title="Inactifs affichés" :value="inactiveOnPage" detail="Sur la page courante" />
     </div>
 
     <div class="gc-business-toolbar">
@@ -121,7 +127,7 @@ onMounted(load)
               <td>{{ b.district || '—' }}</td>
               <td>{{ b.manager?.fullName || '—' }}</td>
               <td class="gc-phone">{{ b.manager?.phone || '—' }}</td>
-              <td><span class="gc-status-chip" :class="b.status"><GcIcon :name="b.status === 'active' ? 'check' : 'alert'" :size="15"/> {{ statusLabels[b.status] ?? b.status }}</span></td>
+              <td><GcStatusBadge :status="b.status" :label="businessStatusLabel(b.status)" :icon="b.status === 'active' ? 'check' : 'alert'" /></td>
               <td><div class="gc-row-actions">
                 <RouterLink v-if="can('commerces.read')" :to="{ name: 'business-qr', params: { id: b.id } }" class="gc-icon-button" :aria-label="`QR Code de ${b.name}`" title="Voir le QR Code"><GcIcon name="qr" :size="19"/></RouterLink>
                 <RouterLink v-if="can('commerces.write')" :to="{ name: 'business-edit', params: { id: b.id } }" class="gc-icon-button gc-edit" :aria-label="`Modifier ${b.name}`" title="Modifier"><GcIcon name="edit" :size="18"/></RouterLink>

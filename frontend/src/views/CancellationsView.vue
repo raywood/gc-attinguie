@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { api } from '../api'
+import { formatMoney, formatAbidjanDateTime } from '../utils/formatters'
 
 const filters = reactive({ from: '', to: '', business: '', receipt: '', actor: '' })
 const items = ref([])
@@ -11,18 +12,8 @@ const loading = ref(false)
 const error = ref('')
 const expandedId = ref(null)
 const pages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
-const moneyFmt = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 })
-
-function money(amount, currency) {
-  return `${moneyFmt.format(Number(amount || 0))} ${currency === 'XOF' ? 'FCFA' : currency}`
-}
-function dateInAbidjan(value) {
-  if (!value) return '—'
-  return new Date(value).toLocaleString('fr-FR', {
-    timeZone: 'Africa/Abidjan', day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  })
-}
+const money = formatMoney
+const dateInAbidjan = formatAbidjanDateTime
 
 async function load() {
   loading.value = true

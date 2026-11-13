@@ -8,6 +8,7 @@ use App\Entity\Payment;
 use App\Enum\InvoiceStatus;
 use App\Enum\PaymentMethod;
 use App\Exception\PaymentRejectedException;
+use App\Exception\DuplicatePaymentReferenceException;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -41,9 +42,30 @@ final class PaymentRecorder
             throw new PaymentRejectedException('Le montant doit être supérieur à zéro.');
         }
 
+        // Normaliser à la frontière du service, pas uniquement dans le contrôleur.
+        if ($reference !== null) {
+            $reference = trim($reference);
+            if ($reference === '' || mb_strlen($reference) > 100) {
+                throw new PaymentRejectedException('Référence de paiement invalide (1 à 100 caractères).');
+            }
+        }
+
         return $this->em->wrapInTransaction(function () use ($invoice, $amount, $method, $reference, $receivedAt): Payment {
             // Verrou + rechargement : deux paiements simultanés ne peuvent pas dépasser le total.
             $this->em->refresh($invoice, LockMode::PESSIMISTIC_WRITE);
+
+            // Vérification sous verrou pour sérialiser les paiements de la même facture.
+            if ($reference !== null) {
+                $duplicate = $this->em->getConnection()->fetchOne(
+                    'SELECT 1 FROM payments WHERE invoice_id = :invoice AND reference = :reference LIMIT 1',
+                    ['invoice' => $invoice->getId(), 'reference' => $reference]
+                );
+                if ($duplicate !== false) {
+                    throw new DuplicatePaymentReferenceException(
+                        'Cette référence est déjà utilisée pour cette facture.'
+                    );
+                }
+            }
 
             if ($invoice->getStatus() !== InvoiceStatus::Issued) {
                 throw new PaymentRejectedException(sprintf(
@@ -53,7 +75,12 @@ final class PaymentRecorder
                 ));
             }
 
-            $balance = $this->balance($invoice);
+            // Lecture SQL post-verrou : pas de collection Doctrine éventuellement en cache.
+            $paid = (string) $this->em->getConnection()->fetchOne(
+                'SELECT COALESCE(SUM(amount), 0)::text FROM payments WHERE invoice_id = :invoice',
+                ['invoice' => $invoice->getId()]
+            );
+            $balance = bcsub($invoice->getTotal(), $paid, 2);
             if (bccomp($amount, $balance, 2) > 0) {
                 throw new PaymentRejectedException(sprintf(
                     'Le montant (%s) dépasse le solde restant dû (%s).',

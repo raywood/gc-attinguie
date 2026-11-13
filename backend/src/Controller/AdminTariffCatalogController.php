@@ -6,6 +6,7 @@ namespace App\Controller;
 use App\Entity\ActivityTariff;
 use App\Entity\ActivityType;
 use App\Service\AdminCatalogInput;
+use App\Service\BillingPeriodCatalog;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -18,8 +19,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 final class AdminTariffCatalogController extends AbstractController
 {
-    private const PERIODS = ['daily', 'weekly', 'monthly', 'yearly'];
-
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly Connection $db,
@@ -48,7 +47,7 @@ final class AdminTariffCatalogController extends AbstractController
         }
         $id = filter_var($data['activityTypeId'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
         $period = $data['period'];
-        if ($id === false || !is_string($period) || !in_array($period, self::PERIODS, true)) {
+        if ($id === false || !is_string($period) || !BillingPeriodCatalog::accepts($period)) {
             return $this->json(['error' => 'Activité ou périodicité invalide.'], 422);
         }
         $activity = $this->em->find(ActivityType::class, $id);

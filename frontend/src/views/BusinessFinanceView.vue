@@ -2,11 +2,12 @@
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '../api'
+import { formatMoney } from '../utils/formatters'
 const route = useRoute()
 const result = ref(null)
 const error = ref('')
 const loading = ref(true)
-const money = (v) => `${Number(v || 0).toLocaleString('fr-FR', {maximumFractionDigits: 2})} FCFA`
+const money = formatMoney
 onMounted(async () => {
   try { result.value = await api.get(`/api/businesses/${encodeURIComponent(route.params.id)}/financial-summary`) }
   catch (e) { error.value = e.status === 403 ? 'Vous n’êtes pas habilité à consulter les finances de ce commerce.' : (e.message || 'Chargement impossible.') }

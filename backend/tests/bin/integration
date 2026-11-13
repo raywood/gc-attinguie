@@ -1,0 +1,33 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+
+// No shell command forwarding, Dotenv, Runtime or Symfony kernel.
+require dirname(__DIR__, 2) . '/vendor/autoload.php';
+
+use App\Tests\Support\IntegrationLauncher;
+use App\Tests\Support\PostgresIdentityProbe;
+use App\Tests\Support\MigrationContext;
+
+try {
+    if ($argc !== 2) {
+        throw new LogicException('Usage: php tests/bin/integration check-offline|check-identity|check-migration-offline|check-migration-identity|prepare|reset');
+    }
+    $migrationCommand = in_array($argv[1], ['check-migration-offline', 'check-migration-identity'], true)
+        || (in_array($argv[1], ['prepare', 'reset'], true) && getenv('GC_TEST_PROFILE') === 'migration');
+    require dirname(__DIR__) . ($migrationCommand ? '/bootstrap.migration.php' : '/bootstrap.integration.php');
+    $environment = [];
+    foreach (['APP_ENV', 'APP_DEBUG', 'GC_TEST_PROFILE', 'DATABASE_URL', 'MESSENGER_TRANSPORT_DSN', 'TEST_TOKEN'] as $name) {
+        $environment[$name] = getenv($name);
+    }
+    $launcher = new IntegrationLauncher(new PostgresIdentityProbe(),
+        static fn (array $env): string => MigrationContext::create($env)->checkIdentity($env));
+    fwrite(STDOUT, $launcher->run($argv[1], $environment) . PHP_EOL);
+    exit(0);
+} catch (LogicException $exception) {
+    fwrite(STDERR, $exception->getMessage() . PHP_EOL);
+} catch (Throwable) {
+    // Driver errors can contain connection strings or credentials.
+    fwrite(STDERR, 'Integration check failed; no sensitive operation authorized.' . PHP_EOL);
+}
+exit(1);
