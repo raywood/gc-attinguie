@@ -1,5 +1,9 @@
 # Socle d'intégration isolé — préparation uniquement
 
+Le profil migration ponctuel ajouté en mission 10B est documenté dans
+[MIGRATIONS.md](MIGRATIONS.md). Le rôle dédié n'est pas provisionné
+automatiquement ; les commandes prepare/reset restent désactivées.
+
 ## État et limites
 
 Ce socle ne démarre aucun service, ne migre aucune base et ne contient pas encore

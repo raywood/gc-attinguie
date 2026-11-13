@@ -7,17 +7,21 @@ require dirname(__DIR__, 2) . '/vendor/autoload.php';
 
 use App\Tests\Support\IntegrationLauncher;
 use App\Tests\Support\PostgresIdentityProbe;
+use App\Tests\Support\MigrationContext;
 
 try {
     if ($argc !== 2) {
-        throw new LogicException('Usage: php tests/bin/integration check-offline|check-identity|prepare|reset');
+        throw new LogicException('Usage: php tests/bin/integration check-offline|check-identity|check-migration-offline|check-migration-identity|prepare|reset');
     }
-    require dirname(__DIR__) . '/bootstrap.integration.php';
+    $migrationCommand = in_array($argv[1], ['check-migration-offline', 'check-migration-identity'], true)
+        || (in_array($argv[1], ['prepare', 'reset'], true) && getenv('GC_TEST_PROFILE') === 'migration');
+    require dirname(__DIR__) . ($migrationCommand ? '/bootstrap.migration.php' : '/bootstrap.integration.php');
     $environment = [];
-    foreach (['APP_ENV', 'DATABASE_URL', 'MESSENGER_TRANSPORT_DSN', 'TEST_TOKEN'] as $name) {
+    foreach (['APP_ENV', 'APP_DEBUG', 'GC_TEST_PROFILE', 'DATABASE_URL', 'MESSENGER_TRANSPORT_DSN', 'TEST_TOKEN'] as $name) {
         $environment[$name] = getenv($name);
     }
-    $launcher = new IntegrationLauncher(new PostgresIdentityProbe());
+    $launcher = new IntegrationLauncher(new PostgresIdentityProbe(),
+        static fn (array $env): string => MigrationContext::create($env)->checkIdentity($env));
     fwrite(STDOUT, $launcher->run($argv[1], $environment) . PHP_EOL);
     exit(0);
 } catch (LogicException $exception) {

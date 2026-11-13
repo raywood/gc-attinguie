@@ -18,13 +18,13 @@ services:
       timeout: 3s
       retries: 15
 
-  test-runner:
+  test-runner: &test-runner
     build: ./docker/php
     working_dir: /var/www/backend
     entrypoint: [php]
     # No kernel boot, database access or automatic migration on startup.
     command: [vendor/bin/phpunit, --testsuite, unit]
-    environment:
+    environment: &test-environment
       APP_ENV: test
       APP_DEBUG: '0'
       KERNEL_CLASS: App\Kernel
@@ -54,6 +54,16 @@ services:
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
     networks: [test]
+
+  migration-runner:
+    <<: *test-runner
+    profiles: [migration]
+    image: gc-attinguie-test-test-runner:latest
+    command: [tests/bin/integration, check-migration-offline]
+    environment:
+      <<: *test-environment
+      GC_TEST_PROFILE: migration
+      DATABASE_URL: 'postgresql://gc_test_migrator:migration-test-only@db-test:5432/gc_attinguie_test?serverVersion=16&charset=utf8'
 
 volumes:
   postgres_test_data:

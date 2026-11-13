@@ -1,0 +1,676 @@
+{
+  "constraints": {
+    "activity_tariffs.activity_tariffs_pkey": {
+      "type": "p"
+    },
+    "activity_tariffs.chk_gc_tariff_amount": {
+      "type": "c",
+      "expression": "amount >= 0"
+    },
+    "activity_tariffs.chk_gc_tariff_currency": {
+      "type": "c",
+      "expression": "currency = 'XOF'"
+    },
+    "activity_tariffs.chk_gc_tariff_period": {
+      "type": "c",
+      "expression": "period IN ('daily','weekly','monthly','yearly')"
+    },
+    "activity_tariffs.fk_gc_tariff_activity": {
+      "type": "f",
+      "columns": "activity_type_id",
+      "target": "activity_types",
+      "target_columns": "id",
+      "delete_action": "r"
+    },
+    "activity_types.activity_types_pkey": {
+      "type": "p"
+    },
+    "activity_types.chk_activity_types_fee": {
+      "type": "c",
+      "expression": "monthly_fee >= 0"
+    },
+    "admin_user_audit.admin_user_audit_pkey": {
+      "type": "p"
+    },
+    "admin_user_audit.fk_admin_audit_actor": {
+      "type": "f",
+      "columns": "actor_user_id",
+      "target": "users",
+      "target_columns": "id",
+      "delete_action": "n"
+    },
+    "admin_user_audit.fk_admin_audit_target": {
+      "type": "f",
+      "columns": "target_user_id",
+      "target": "users",
+      "target_columns": "id",
+      "delete_action": "n"
+    },
+    "app_branding.app_branding_pkey": {
+      "type": "p"
+    },
+    "app_branding.chk_gc_app_branding_singleton": {
+      "type": "c",
+      "expression": "id = 1"
+    },
+    "app_branding_audit.app_branding_audit_pkey": {
+      "type": "p"
+    },
+    "business_billing_profiles.business_billing_profiles_pkey": {
+      "type": "p"
+    },
+    "business_billing_profiles.chk_gc_billing_frequency": {
+      "type": "c",
+      "expression": "frequency IN ('daily','weekly','monthly','yearly')"
+    },
+    "business_billing_profiles.fk_gc_bbp_business": {
+      "type": "f",
+      "columns": "business_id",
+      "target": "businesses",
+      "target_columns": "id",
+      "delete_action": "r"
+    },
+    "business_billing_profiles.fk_gc_bbp_user": {
+      "type": "f",
+      "columns": "created_by_id",
+      "target": "users",
+      "target_columns": "id",
+      "delete_action": "n"
+    },
+    "business_financial_access_audit.business_financial_access_audit_pkey": {
+      "type": "p"
+    },
+    "business_financial_access_audit.fk_bfaa_business": {
+      "type": "f",
+      "columns": "business_id",
+      "target": "businesses",
+      "target_columns": "id",
+      "delete_action": "r"
+    },
+    "business_financial_access_audit.fk_bfaa_user": {
+      "type": "f",
+      "columns": "actor_user_id",
+      "target": "users",
+      "target_columns": "id",
+      "delete_action": "n"
+    },
+    "business_manager_transfer_audit.business_manager_transfer_audit_pkey": {
+      "type": "p"
+    },
+    "business_manager_transfer_audit.fk_gc_bmta_business": {
+      "type": "f",
+      "columns": "business_id",
+      "target": "businesses",
+      "target_columns": "id",
+      "delete_action": "r"
+    },
+    "business_managers.business_managers_pkey": {
+      "type": "p"
+    },
+    "business_managers.fk_bm_business": {
+      "type": "f",
+      "columns": "business_id",
+      "target": "businesses",
+      "target_columns": "id",
+      "delete_action": "c"
+    },
+    "business_managers.fk_bm_manager": {
+      "type": "f",
+      "columns": "manager_id",
+      "target": "managers",
+      "target_columns": "id",
+      "delete_action": "r"
+    },
+    "businesses.businesses_pkey": {
+      "type": "p"
+    },
+    "businesses.fk_businesses_activity_type": {
+      "type": "f",
+      "columns": "activity_type_id",
+      "target": "activity_types",
+      "target_columns": "id",
+      "delete_action": "r"
+    },
+    "daily_activity_records.chk_gc_daily_amount": {
+      "type": "c",
+      "expression": "unit_amount > 0"
+    },
+    "daily_activity_records.chk_gc_daily_currency": {
+      "type": "c",
+      "expression": "currency = 'XOF'"
+    },
+    "daily_activity_records.chk_gc_daily_status": {
+      "type": "c",
+      "expression": "status IN ('confirmed','void')"
+    },
+    "daily_activity_records.daily_activity_records_pkey": {
+      "type": "p"
+    },
+    "daily_activity_records.fk_gc_daily_business": {
+      "type": "f",
+      "columns": "business_id",
+      "target": "businesses",
+      "target_columns": "id",
+      "delete_action": "r"
+    },
+    "daily_activity_records.fk_gc_daily_observer": {
+      "type": "f",
+      "columns": "observed_by_id",
+      "target": "users",
+      "target_columns": "id",
+      "delete_action": "n"
+    },
+    "daily_activity_records.fk_gc_daily_voider": {
+      "type": "f",
+      "columns": "voided_by_id",
+      "target": "users",
+      "target_columns": "id",
+      "delete_action": "n"
+    },
+    "doctrine_migration_versions.doctrine_migration_versions_pkey": {
+      "type": "p"
+    },
+    "invoice_lines.fk_invoice_lines_invoice": {
+      "type": "f",
+      "columns": "invoice_id",
+      "target": "invoices",
+      "target_columns": "id",
+      "delete_action": "c"
+    },
+    "invoice_lines.invoice_lines_pkey": {
+      "type": "p"
+    },
+    "invoices.chk_invoices_status": {
+      "type": "c",
+      "expression": "status IN ('draft','issued','paid','cancelled')"
+    },
+    "invoices.fk_invoices_business": {
+      "type": "f",
+      "columns": "business_id",
+      "target": "businesses",
+      "target_columns": "id",
+      "delete_action": "r"
+    },
+    "invoices.fk_invoices_created_by": {
+      "type": "f",
+      "columns": "created_by_id",
+      "target": "users",
+      "target_columns": "id",
+      "delete_action": "n"
+    },
+    "invoices.invoices_pkey": {
+      "type": "p"
+    },
+    "managers.fk_gc_managers_user": {
+      "type": "f",
+      "columns": "user_id",
+      "target": "users",
+      "target_columns": "id",
+      "delete_action": "n"
+    },
+    "managers.managers_pkey": {
+      "type": "p"
+    },
+    "merchant_business_access.fk_gc_merchant_business": {
+      "type": "f",
+      "columns": "business_id",
+      "target": "businesses",
+      "target_columns": "id",
+      "delete_action": "r"
+    },
+    "merchant_business_access.fk_gc_merchant_granter": {
+      "type": "f",
+      "columns": "granted_by_id",
+      "target": "users",
+      "target_columns": "id",
+      "delete_action": "n"
+    },
+    "merchant_business_access.fk_gc_merchant_user": {
+      "type": "f",
+      "columns": "user_id",
+      "target": "users",
+      "target_columns": "id",
+      "delete_action": "r"
+    },
+    "merchant_business_access.merchant_business_access_pkey": {
+      "type": "p"
+    },
+    "payments.chk_payments_amount": {
+      "type": "c",
+      "expression": "amount > 0"
+    },
+    "payments.fk_payments_invoice": {
+      "type": "f",
+      "columns": "invoice_id",
+      "target": "invoices",
+      "target_columns": "id",
+      "delete_action": "r"
+    },
+    "payments.payments_pkey": {
+      "type": "p"
+    },
+    "receipts.chk_receipts_cancellation_data": {
+      "type": "c",
+      "expression": "(status = 'issued' AND cancelled_at IS NULL AND cancelled_by_user_id IS NULL AND cancellation_reason IS NULL AND cancelled_by_email IS NULL) OR (status = 'cancelled' AND cancelled_at IS NOT NULL AND cancelled_by_user_id IS NOT NULL AND cancellation_reason IS NOT NULL AND cancelled_by_email IS NOT NULL AND char_length(btrim(cancellation_reason)) >= 10 AND char_length(btrim(cancellation_reason)) <= 500)"
+    },
+    "receipts.chk_receipts_status": {
+      "type": "c",
+      "expression": "status IN ('issued','cancelled')"
+    },
+    "receipts.fk_receipts_cancelled_by": {
+      "type": "f",
+      "columns": "cancelled_by_user_id",
+      "target": "users",
+      "target_columns": "id",
+      "delete_action": "r"
+    },
+    "receipts.fk_receipts_payment": {
+      "type": "f",
+      "columns": "payment_id",
+      "target": "payments",
+      "target_columns": "id",
+      "delete_action": "r"
+    },
+    "receipts.receipts_pkey": {
+      "type": "p"
+    },
+    "security_permissions.security_permissions_pkey": {
+      "type": "p"
+    },
+    "security_role_permissions.fk_sec_role_perm_permission": {
+      "type": "f",
+      "columns": "permission_id",
+      "target": "security_permissions",
+      "target_columns": "id",
+      "delete_action": "c"
+    },
+    "security_role_permissions.fk_sec_role_perm_role": {
+      "type": "f",
+      "columns": "role_id",
+      "target": "security_roles",
+      "target_columns": "id",
+      "delete_action": "c"
+    },
+    "security_role_permissions.security_role_permissions_pkey": {
+      "type": "p"
+    },
+    "security_roles.security_roles_pkey": {
+      "type": "p"
+    },
+    "user_profiles.fk_user_profiles_user": {
+      "type": "f",
+      "columns": "user_id",
+      "target": "users",
+      "target_columns": "id",
+      "delete_action": "c"
+    },
+    "user_profiles.user_profiles_pkey": {
+      "type": "p"
+    },
+    "users.users_pkey": {
+      "type": "p"
+    }
+  },
+  "indexes": {
+    "activity_tariffs_pkey": {
+      "table": "activity_tariffs",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "activity_types_pkey": {
+      "table": "activity_types",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "admin_user_audit_pkey": {
+      "table": "admin_user_audit",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "app_branding_audit_pkey": {
+      "table": "app_branding_audit",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "app_branding_pkey": {
+      "table": "app_branding",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "business_billing_profiles_pkey": {
+      "table": "business_billing_profiles",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "business_financial_access_audit_pkey": {
+      "table": "business_financial_access_audit",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "business_manager_transfer_audit_pkey": {
+      "table": "business_manager_transfer_audit",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "business_managers_pkey": {
+      "table": "business_managers",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "businesses_pkey": {
+      "table": "businesses",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "daily_activity_records_pkey": {
+      "table": "daily_activity_records",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "doctrine_migration_versions_pkey": {
+      "table": "doctrine_migration_versions",
+      "unique": true,
+      "keys": "version",
+      "predicate": ""
+    },
+    "idx_65d29b322989f1fd": {
+      "table": "payments",
+      "unique": false,
+      "keys": "invoice_id",
+      "predicate": ""
+    },
+    "idx_6a2f2f95b03a8386": {
+      "table": "invoices",
+      "unique": false,
+      "keys": "created_by_id",
+      "predicate": ""
+    },
+    "idx_72dbdc232989f1fd": {
+      "table": "invoice_lines",
+      "unique": false,
+      "keys": "invoice_id",
+      "predicate": ""
+    },
+    "idx_a179ee90783e3463": {
+      "table": "business_managers",
+      "unique": false,
+      "keys": "manager_id",
+      "predicate": ""
+    },
+    "idx_a179ee90a89db457": {
+      "table": "business_managers",
+      "unique": false,
+      "keys": "business_id",
+      "predicate": ""
+    },
+    "idx_admin_user_audit_actor": {
+      "table": "admin_user_audit",
+      "unique": false,
+      "keys": "actor_user_id",
+      "predicate": ""
+    },
+    "idx_admin_user_audit_target_date": {
+      "table": "admin_user_audit",
+      "unique": false,
+      "keys": "target_user_id,created_at",
+      "predicate": ""
+    },
+    "idx_bfaa_business_viewed_at": {
+      "table": "business_financial_access_audit",
+      "unique": false,
+      "keys": "business_id,viewed_at",
+      "predicate": ""
+    },
+    "idx_businesses_activity_type": {
+      "table": "businesses",
+      "unique": false,
+      "keys": "activity_type_id",
+      "predicate": ""
+    },
+    "idx_gc_bmta_business_time": {
+      "table": "business_manager_transfer_audit",
+      "unique": false,
+      "keys": "business_id,changed_at",
+      "predicate": ""
+    },
+    "idx_gc_daily_activity_date": {
+      "table": "daily_activity_records",
+      "unique": false,
+      "keys": "activity_date",
+      "predicate": ""
+    },
+    "idx_gc_managers_user": {
+      "table": "managers",
+      "unique": false,
+      "keys": "user_id",
+      "predicate": ""
+    },
+    "idx_gc_tariff_activity": {
+      "table": "activity_tariffs",
+      "unique": false,
+      "keys": "activity_type_id",
+      "predicate": ""
+    },
+    "idx_invoices_status": {
+      "table": "invoices",
+      "unique": false,
+      "keys": "status",
+      "predicate": ""
+    },
+    "idx_receipts_cancelled_by": {
+      "table": "receipts",
+      "unique": false,
+      "keys": "cancelled_by_user_id",
+      "predicate": ""
+    },
+    "idx_security_role_perm_permission": {
+      "table": "security_role_permissions",
+      "unique": false,
+      "keys": "permission_id",
+      "predicate": ""
+    },
+    "idx_security_role_perm_role": {
+      "table": "security_role_permissions",
+      "unique": false,
+      "keys": "role_id",
+      "predicate": ""
+    },
+    "invoice_lines_pkey": {
+      "table": "invoice_lines",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "invoices_pkey": {
+      "table": "invoices",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "managers_pkey": {
+      "table": "managers",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "merchant_business_access_pkey": {
+      "table": "merchant_business_access",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "payments_pkey": {
+      "table": "payments",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "receipts_pkey": {
+      "table": "receipts",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "security_permissions_pkey": {
+      "table": "security_permissions",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "security_role_permissions_pkey": {
+      "table": "security_role_permissions",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "security_roles_pkey": {
+      "table": "security_roles",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "uniq_1483a5e9e7927c74": {
+      "table": "users",
+      "unique": true,
+      "keys": "email",
+      "predicate": ""
+    },
+    "uniq_2dca55ec98c24f5b": {
+      "table": "businesses",
+      "unique": true,
+      "keys": "qr_public_token",
+      "predicate": ""
+    },
+    "uniq_4732bf8377153098": {
+      "table": "activity_types",
+      "unique": true,
+      "keys": "code",
+      "predicate": ""
+    },
+    "uniq_6a2f2f9596901f54": {
+      "table": "invoices",
+      "unique": true,
+      "keys": "number",
+      "predicate": ""
+    },
+    "uniq_business_primary_manager": {
+      "table": "business_managers",
+      "unique": true,
+      "keys": "business_id",
+      "predicate": "is_primary=trueandended_atisnull"
+    },
+    "uniq_gc_billing_business_effective": {
+      "table": "business_billing_profiles",
+      "unique": true,
+      "keys": "business_id,effective_from",
+      "predicate": ""
+    },
+    "uniq_gc_daily_business_date": {
+      "table": "daily_activity_records",
+      "unique": true,
+      "keys": "business_id,activity_date",
+      "predicate": ""
+    },
+    "uniq_gc_merchant_access": {
+      "table": "merchant_business_access",
+      "unique": true,
+      "keys": "user_id,business_id",
+      "predicate": ""
+    },
+    "uniq_gc_tariff_activity_period": {
+      "table": "activity_tariffs",
+      "unique": true,
+      "keys": "activity_type_id,period",
+      "predicate": ""
+    },
+    "uniq_gc_users_email_lower": {
+      "table": "users",
+      "unique": true,
+      "keys": "lower(email)",
+      "predicate": ""
+    },
+    "uniq_invoice_business_period": {
+      "table": "invoices",
+      "unique": true,
+      "keys": "business_id,period",
+      "predicate": ""
+    },
+    "uniq_payments_invoice_reference": {
+      "table": "payments",
+      "unique": true,
+      "keys": "invoice_id,reference",
+      "predicate": ""
+    },
+    "uniq_receipts_number": {
+      "table": "receipts",
+      "unique": true,
+      "keys": "number",
+      "predicate": ""
+    },
+    "uniq_receipts_payment": {
+      "table": "receipts",
+      "unique": true,
+      "keys": "payment_id",
+      "predicate": ""
+    },
+    "uniq_receipts_token": {
+      "table": "receipts",
+      "unique": true,
+      "keys": "verification_token",
+      "predicate": ""
+    },
+    "uniq_security_permissions_code": {
+      "table": "security_permissions",
+      "unique": true,
+      "keys": "code",
+      "predicate": ""
+    },
+    "uniq_security_role_permissions_pair": {
+      "table": "security_role_permissions",
+      "unique": true,
+      "keys": "role_id,permission_id",
+      "predicate": ""
+    },
+    "uniq_security_roles_code": {
+      "table": "security_roles",
+      "unique": true,
+      "keys": "code",
+      "predicate": ""
+    },
+    "uniq_user_profiles_invitation_hash": {
+      "table": "user_profiles",
+      "unique": true,
+      "keys": "invitation_token_hash",
+      "predicate": ""
+    },
+    "uniq_user_profiles_user_id": {
+      "table": "user_profiles",
+      "unique": true,
+      "keys": "user_id",
+      "predicate": ""
+    },
+    "user_profiles_pkey": {
+      "table": "user_profiles",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    },
+    "users_pkey": {
+      "table": "users",
+      "unique": true,
+      "keys": "id",
+      "predicate": ""
+    }
+  }
+}

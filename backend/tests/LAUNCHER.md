@@ -18,6 +18,12 @@ Il est déjà inclus dans le montage tests/ du runner de compose.test.yaml.
   Aucun SQL de migration/nettoyage ni transfert vers bin/console n'est implémenté.
 - Toute autre commande ou argument supplémentaire est refusé.
 
+Extension mission 10B étape 1 : `check-migration-offline` et
+`check-migration-identity` utilisent un profil migrateur distinct et un bootstrap
+séparé. Les exigences du profil runner ci-dessous ne sont pas assouplies.
+Voir [MIGRATIONS.md](MIGRATIONS.md) pour le provisionnement futur, la connexion
+DBAL partagée avec Doctrine et les contrôles préparés. Aucune écriture autorisée.
+
 Le processus exige les quatre variables de test exactes de compose.test.yaml :
 APP_ENV=test, DATABASE_URL dédiée, MESSENGER_TRANSPORT_DSN=in-memory:// et
 TEST_TOKEN vide. Les valeurs héritées contradictoires sont rejetées, jamais
